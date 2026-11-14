@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, MapPin, Users, ArrowRight, CheckCircle2, Sparkles, PlusCircle } from 'lucide-react';
 import { TourTrip } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   currentTrip?: TourTrip;
@@ -17,6 +18,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onViewToursClick,
   onOrganizeTripClick,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="hero" className="relative pt-10 pb-16 overflow-hidden bg-white">
       {/* Subtle clean background lighting */}
@@ -28,7 +31,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Family Yatras & Group Trips</span>
+            <span>{t('hero_badge')}</span>
           </div>
         </div>
 
@@ -40,15 +43,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <div className="space-y-3">
               <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tight leading-[1.1] font-serif-heading">
-                Sakinaka Tour
+                {t('brand_name')}
               </h1>
               <p className="text-lg sm:text-2xl font-bold text-amber-800">
-                Parivar, Friends & Devotees Ke Safar Ka Vishwas
+                {t('hero_subtitle')}
               </p>
             </div>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
-              Family pilgrimage ho, dosto/boys ka group trip ho ya festive yatra — hum saal bhar sabhi prakar ke tours organize karte hain. Swachh AC coaches, shuddh sattvik bhojan aur seedha transparent safar.
+              {t('hero_desc')}
             </p>
 
             {/* Featured Tour Card */}
@@ -86,7 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onBookNowClick}
                 className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
-                <span>Book Bus Seats</span>
+                <span>{t('book_seats_now')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -95,7 +98,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-sm border border-amber-200 transition-all"
               >
                 <PlusCircle className="w-4 h-4 text-amber-700" />
-                <span>List Your Trip With Us</span>
+                <span>{t('list_tour_cta')}</span>
               </button>
             </div>
 
@@ -125,15 +128,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <img
                   src="/Balaji_temple_in_ketkawla.jpg"
                   alt="Ketkawla Balaji Temple"
-                  className="w-full h-[400px] object-cover group-hover:scale-103 transition-transform duration-500"
+                  className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
                     e.currentTarget.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80";
                   }}
                 />
 
+                {/* Sakinaka Tour Brand Badge (Official brand label removed as requested) */}
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-amber-500/30">
+                  <img
+                    src="/krishh_logo_circle.png"
+                    alt="Krishh Travels"
+                    className="w-8 h-8 rounded-full object-cover ring-1 ring-amber-400/40"
+                    onError={(e) => {
+                      e.currentTarget.src = "/krishh_logo.png";
+                    }}
+                  />
+                  <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wider uppercase font-serif-heading">
+                    Sakinaka Tour
+                  </span>
+                </div>
 
                 {/* Dark Gradient Overlay with Temple Info */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-end p-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-end p-6 text-white pointer-events-none">
                   <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider mb-1">
                     Ketkawla Pratirup Tirupati Balaji
                   </span>

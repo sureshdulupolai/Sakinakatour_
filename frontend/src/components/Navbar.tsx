@@ -1,6 +1,7 @@
 import React from 'react';
 import { Ticket, User, ShieldCheck, LogOut, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { LanguageSelector } from './LanguageSelector';
 
 interface NavbarProps {
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLoginModal,
 }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 transition-all">
@@ -42,10 +44,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-serif-heading leading-tight">
-              Sakinaka Tour
+              {t('brand_name')}
             </h1>
             <p className="text-[11px] font-semibold text-amber-800 tracking-wider uppercase">
-              Tours, Yatras & Group Trips
+              {t('brand_tagline')}
             </p>
           </div>
         </div>
@@ -58,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               currentPath === '/' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
             }`}
           >
-            Home
+            {t('nav_home')}
           </button>
 
           <button
@@ -67,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               currentPath === '/book' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
             }`}
           >
-            Book Seats
+            {t('nav_book')}
           </button>
 
           <button
@@ -76,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               currentPath === '/organize' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
             }`}
           >
-            <span>List Your Tour</span>
+            <span>{t('nav_organize')}</span>
             <span className="text-[10px] uppercase font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md">New</span>
           </button>
         </nav>
@@ -96,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'bg-amber-600 hover:bg-amber-700 text-white'
             }`}
           >
-            <span>Book</span>
+            <span>{t('nav_book')}</span>
           </button>
 
           {/* My Bookings Icon Button */}
@@ -106,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="View My Bookings"
           >
             <Ticket className="w-4 h-4 text-amber-700" />
-            <span className="hidden lg:inline">My Bookings</span>
+            <span className="hidden lg:inline">{t('nav_my_bookings')}</span>
           </button>
 
           {/* User state / Profile */}
@@ -129,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   title="Organizer Admin Portal"
                 >
                   <ShieldCheck className="w-4 h-4 text-amber-800" />
-                  <span className="hidden sm:inline">Admin</span>
+                  <span className="hidden sm:inline">{t('nav_admin')}</span>
                 </button>
               )}
 
@@ -148,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center gap-1.5"
               >
                 <User className="w-3.5 h-3.5" />
-                <span>Login</span>
+                <span>{t('nav_login')}</span>
               </button>
 
               <button

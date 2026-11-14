@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Bus, Compass, Sparkles, ShieldCheck, PhoneCall } from 'lucide-react';
 import { TourTrip, BusSummary, SeatItem } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 import { TripSelector } from './TripSelector';
 import { BusCardSelector } from './BusCardSelector';
 import { BusLayoutViewer } from './BusLayoutViewer';
@@ -32,6 +33,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({
   onBackToHome,
   onOpenSocialHelp,
 }) => {
+  const { t } = useLanguage();
   const activeTrip = trips.find((t) => t.id === selectedTripId) || trips[0];
   const activeBus = activeTrip?.buses.find((b) => b.id === selectedBusId) || activeTrip?.buses[0];
 
@@ -46,18 +48,18 @@ export const BookingPage: React.FC<BookingPageProps> = ({
             className="inline-flex items-center gap-2 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3.5 py-1.5 rounded-xl transition-all mb-2"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Wapas Home Page Par Jayein</span>
+            <span>{t('back')}</span>
           </button>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 font-serif-heading">
-              Sakinaka Tour Bus Booking
+              {t('brand_name')} • {t('nav_book')}
             </h1>
             <span className="hidden sm:inline text-xs font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
               Live Seating Grid
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Apni yatra aur coach chunein, seats select karein aur UPI token advance se confirm karein.
+            {t('select_seats_hint')}
           </p>
         </div>
 

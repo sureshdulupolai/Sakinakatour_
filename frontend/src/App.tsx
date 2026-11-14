@@ -6,6 +6,7 @@ import {
 import { TourTrip, BusSummary, SeatItem, PublicSettings } from './types';
 import { fetchTrips, fetchBusSeats, fetchPublicSettings } from './services/api';
 import { useAuth } from './context/AuthContext';
+import { useLanguage } from './context/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
@@ -18,10 +19,12 @@ import { BookingConfirmationCard } from './components/BookingConfirmationCard';
 import { MyBookingsModal } from './components/MyBookingsModal';
 import { AdminPortal } from './components/AdminPortal';
 import { LoginModal } from './components/LoginModal';
+import { Footer } from './components/Footer';
 import { CustomToast, ToastMessage } from './components/CustomToast';
 
 export function App() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Navigation path routing: '/' for Home Showcase, '/book' for Dedicated Seating Grid, '/organize' for Listing
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -201,10 +204,12 @@ export function App() {
             {/* Tour Showcase Packages (Clean overview without seating grid clutter) */}
             <TourShowcaseSection
               trips={trips}
+              isLoading={loading}
               onSelectTripToBook={(tripId) => {
                 handleSelectTrip(tripId);
                 navigate('/book');
               }}
+              onOrganizeTripClick={() => navigate('/organize')}
             />
 
             {/* About Sakinaka Tour Heritage */}
@@ -266,7 +271,7 @@ export function App() {
               onClick={() => setIsBookingModalOpen(true)}
               className="shrink-0 px-4 sm:px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5"
             >
-              <span>Proceed to Book</span>
+              <span>{t('proceed_to_book')}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
 
@@ -274,30 +279,15 @@ export function App() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 text-xs py-10 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full ring-1 ring-amber-400/80 p-0.5 flex items-center justify-center overflow-hidden bg-slate-950">
-              <img
-                src="/krishh_logo_circle.png"
-                alt="Krish Emblem"
-                className="w-full h-full object-cover rounded-full transition-transform duration-300 ease-out hover:scale-125 cursor-pointer"
-                onError={(e) => {
-                  e.currentTarget.src = "/krishh_logo.png";
-                }}
-              />
-            </div>
-            <div>
-              <span className="font-bold text-slate-200 text-sm">Sakinaka Tour & Group Trips</span>
-              <div className="text-[11px] text-slate-500">Official Community Tour, Yatra & Listing Platform</div>
-            </div>
-          </div>
-          <div className="text-center sm:text-right text-slate-500">
-            © 2026 Sakinaka Tour. Har parivar aur group ke saath pavitra v vishwasniya safar.
-          </div>
-        </div>
-      </footer>
+      {/* Professional Real-World Footer */}
+      <Footer
+        currentPath={currentPath}
+        onNavigate={navigate}
+        onOpenMyBookings={() => setIsMyBookingsOpen(true)}
+        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        onScrollToSection={scrollToSection}
+        settings={publicSettings}
+      />
 
       {/* Family Booking Modal */}
       {activeTrip && activeBus && (

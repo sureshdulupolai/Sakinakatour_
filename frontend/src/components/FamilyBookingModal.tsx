@@ -4,6 +4,7 @@ import {
   ArrowRight, ArrowLeft, Clock, Phone, Sparkles, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { SeatItem, TourTrip, BusSummary, PassengerDetail, PublicSettings } from '../types';
 import { sendOtp, verifyOtp, createBooking } from '../services/api';
 
@@ -31,6 +32,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
   showToast,
 }) => {
   const { user, loginWithToken } = useAuth();
+  const { t } = useLanguage();
 
   // Wizard Steps: 1: Auth -> 2: Passengers -> 3: Payment
   const [step, setStep] = useState<number>(user ? 2 : 1);
@@ -249,12 +251,12 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
             </span>
             <div className="leading-tight">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                {step === 1 && 'Step 1: Contact Details'}
-                {step === 2 && 'Step 2: Passenger Details'}
-                {step === 3 && 'Step 3: UPI Payment'}
+                {step === 1 && t('modal_step1')}
+                {step === 2 && t('modal_step2')}
+                {step === 3 && t('modal_step3')}
               </h3>
               <p className="text-[11px] text-slate-500">
-                {selectedSeats.length} Seats: <span className="font-mono font-bold text-amber-800">{selectedSeats.join(', ')}</span> • ₹{totalAmount.toLocaleString('en-IN')}
+                {selectedSeats.length} {t('seats_selected_count')}: <span className="font-mono font-bold text-amber-800">{selectedSeats.join(', ')}</span> • ₹{totalAmount.toLocaleString('en-IN')}
               </p>
             </div>
           </div>
@@ -275,7 +277,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
             <div className="space-y-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Full Name *
+                  {t('full_name')} *
                 </label>
                 <input
                   type="text"
@@ -289,7 +291,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Mobile Number *
+                    {t('mobile_number')} *
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
@@ -310,7 +312,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Age
+                      {t('age')}
                     </label>
                     <input
                       type="number"
@@ -324,7 +326,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Gender
+                      {t('gender')}
                     </label>
                     <select
                       value={userGender}
@@ -376,7 +378,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                     disabled={authLoading}
                     className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
                   >
-                    <span>Send Verification OTP</span>
+                    <span>{t('send_otp')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 ) : (
@@ -385,7 +387,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                     disabled={authLoading}
                     className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
                   >
-                    <span>Verify & Continue</span>
+                    <span>{t('verify_otp')}</span>
                     <CheckCircle className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -398,7 +400,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">
-                  {passengers.length} Passenger{passengers.length > 1 ? 's' : ''}
+                  {passengers.length} {t('passenger')}
                 </span>
                 {passengers.length > 1 && (
                   <button
@@ -406,7 +408,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                     className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3 text-amber-600" />
-                    <span>Auto-Fill Names</span>
+                    <span>{t('auto_fill_family')}</span>
                   </button>
                 )}
               </div>
@@ -424,7 +426,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                         {p.seat_number}
                       </span>
                       <span className="text-[11px] font-bold text-slate-700">
-                        {p.is_primary ? 'Primary Devotee' : `Passenger ${index + 1}`}
+                        {p.is_primary ? t('primary_devotee') : `${t('passenger')} ${index + 1}`}
                       </span>
                     </div>
 
@@ -434,7 +436,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                           type="text"
                           value={p.name}
                           onChange={(e) => handleUpdatePassenger(index, 'name', e.target.value)}
-                          placeholder="Passenger Name"
+                          placeholder={`${t('passenger')} ${index + 1}`}
                           className="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium"
                         />
                       </div>
@@ -445,7 +447,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                           max="100"
                           value={p.age || ''}
                           onChange={(e) => handleUpdatePassenger(index, 'age', e.target.value ? parseInt(e.target.value) : undefined)}
-                          placeholder="Age"
+                          placeholder={t('age')}
                           className="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium"
                         />
                       </div>
@@ -471,14 +473,14 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                   className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3 h-3" />
-                  <span>Back</span>
+                  <span>{t('back')}</span>
                 </button>
 
                 <button
                   onClick={() => setStep(3)}
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5"
                 >
-                  <span>Continue to UPI Pay</span>
+                  <span>{t('modal_step3')}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -499,7 +501,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                       : 'border-slate-200 bg-white text-slate-700'
                   }`}
                 >
-                  <div className="text-[11px] font-semibold text-slate-500">Token Advance</div>
+                  <div className="text-[11px] font-semibold text-slate-500">{t('token_advance')}</div>
                   <div className="text-sm font-black text-amber-900">₹{defaultAdvance.toLocaleString('en-IN')}</div>
                 </button>
 
@@ -512,7 +514,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                       : 'border-slate-200 bg-white text-slate-700'
                   }`}
                 >
-                  <div className="text-[11px] font-semibold text-slate-500">Full Fare</div>
+                  <div className="text-[11px] font-semibold text-slate-500">{t('full_fare')}</div>
                   <div className="text-sm font-black text-slate-900">₹{totalAmount.toLocaleString('en-IN')}</div>
                 </button>
               </div>
@@ -546,7 +548,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                     </button>
                   </div>
                   <div className="text-[10px] text-slate-500">
-                    Scan with GPay, PhonePe, Paytm, BHIM
+                    {t('scan_upi_qr')}
                   </div>
                 </div>
               </div>
@@ -555,7 +557,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
               <div className="space-y-2">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    UPI Transaction UTR / Ref ID *
+                    {t('upi_utr_label')} *
                   </label>
                   <input
                     type="text"
@@ -584,7 +586,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                   className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3 h-3" />
-                  <span>Back</span>
+                  <span>{t('back')}</span>
                 </button>
 
                 <button
@@ -596,7 +598,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                     <span>Submitting...</span>
                   ) : (
                     <>
-                      <span>Confirm & Hold Seats</span>
+                      <span>{t('confirm_hold_seats')}</span>
                       <CheckCircle className="w-3.5 h-3.5" />
                     </>
                   )}

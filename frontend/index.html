@@ -11,8 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#FAFAFA] text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
-    <!-- Hidden anchor for real-time client-side translation engine (zero backend load) -->
-    <div id="google_translate_element" style="display:none; position:absolute; top:-9999px; left:-9999px;"></div>
+    <!-- Stealth anchor for client-side translation engine (zero backend load) -->
+    <div id="google_translate_element" style="position: fixed; bottom: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -9999; overflow: hidden;"></div>
     <div id="root"></div>
     <script type="text/javascript">
       function googleTranslateElementInit() {

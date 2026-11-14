@@ -1,28 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { TRANSLATIONS, TranslationStrings, getTranslation } from '../translations';
 
 export interface LanguageOption {
   code: string;
   name: string;
   nativeName: string;
-  badge?: string;
 }
 
 export const INDIAN_LANGUAGES: LanguageOption[] = [
-  { code: 'en', name: 'English', nativeName: 'English', badge: 'Default' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', badge: 'National' },
-  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', badge: 'Mumbai' },
-  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', badge: 'Popular' },
+  { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
+  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી' },
   { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
-  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ' },
   { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ' },
+  { code: 'bho', name: 'Bhojpuri', nativeName: 'भोजपुरी' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
   { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ' },
   { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া' },
   { code: 'ur', name: 'Urdu', nativeName: 'اردو' },
   { code: 'sa', name: 'Sanskrit', nativeName: 'संस्कृतम्' },
-  { code: 'bho', name: 'Bhojpuri', nativeName: 'भोजपुरी' },
 ];
 
 interface LanguageContextType {
@@ -30,6 +30,7 @@ interface LanguageContextType {
   currentLanguageOption: LanguageOption;
   setLanguage: (code: string) => void;
   languages: LanguageOption[];
+  t: (key: keyof TranslationStrings, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -39,16 +40,17 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return localStorage.getItem('sakinaka_user_lang') || 'en';
   });
 
-  const currentLanguageOption = 
+  const currentLanguageOption =
     INDIAN_LANGUAGES.find((l) => l.code === currentLang) || INDIAN_LANGUAGES[0];
 
-  const applyGoogleTranslateLanguage = (langCode: string) => {
+  const applyGoogleTranslate = (langCode: string) => {
     // Set cookies for Google Translate client
     const domain = window.location.hostname;
     document.cookie = `googtrans=/en/${langCode}; path=/;`;
-    if (domain) {
+    document.cookie = `googtrans=/auto/${langCode}; path=/;`;
+    if (domain && domain !== 'localhost') {
       document.cookie = `googtrans=/en/${langCode}; path=/; domain=.${domain};`;
-      document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain};`;
+      document.cookie = `googtrans=/auto/${langCode}; path=/; domain=${domain};`;
     }
 
     // Try finding Google's combo select element
@@ -56,8 +58,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (combo) {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
+      combo.dispatchEvent(new Event('input'));
     } else {
-      // If translate element script is loading, retry slightly later
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
@@ -65,24 +67,29 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (delayedCombo) {
           delayedCombo.value = langCode;
           delayedCombo.dispatchEvent(new Event('change'));
+          delayedCombo.dispatchEvent(new Event('input'));
           clearInterval(interval);
-        } else if (attempts > 15) {
+        } else if (attempts > 12) {
           clearInterval(interval);
         }
-      }, 300);
+      }, 250);
     }
   };
 
   const setLanguage = (code: string) => {
     setCurrentLangState(code);
     localStorage.setItem('sakinaka_user_lang', code);
-    applyGoogleTranslateLanguage(code);
+    applyGoogleTranslate(code);
+  };
+
+  const t = (key: keyof TranslationStrings, fallback?: string): string => {
+    return getTranslation(currentLang, key) || fallback || '';
   };
 
   useEffect(() => {
     const saved = localStorage.getItem('sakinaka_user_lang');
     if (saved && saved !== 'en') {
-      applyGoogleTranslateLanguage(saved);
+      applyGoogleTranslate(saved);
     }
   }, []);
 
@@ -93,6 +100,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         currentLanguageOption,
         setLanguage,
         languages: INDIAN_LANGUAGES,
+        t,
       }}
     >
       {children}
@@ -107,4 +115,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-

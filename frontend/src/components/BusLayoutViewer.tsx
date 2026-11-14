@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Armchair, Bed, Clock, Lock, Check, Disc, Info } from 'lucide-react';
 import { SeatItem } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BusLayoutViewerProps {
   bus: any;
@@ -17,6 +18,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
   onToggleSeat,
   maxSeats = 60,
 }) => {
+  const { t } = useLanguage();
   const [activeDeck, setActiveDeck] = useState<'lower' | 'upper'>('lower');
 
   if (!bus || seats.length === 0) {
@@ -65,12 +67,12 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
               </span>
             ) : (
               <span className="text-[11px] font-semibold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-lg border border-amber-200">
-                Plate Allotted on Trip Day
+                {t('plate_allotted_trip_day')}
               </span>
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Sleeper Coach' : 'Pushback Coach'} • Select your preferred seats
+            {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Sleeper Coach' : 'Pushback Coach'} • {t('select_seats_title')}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
                 }`}
             >
               <Armchair className="w-4 h-4 text-amber-700" />
-              <span>Lower Deck</span>
+              <span>{t('lower_deck')}</span>
             </button>
             <button
               onClick={() => setActiveDeck('upper')}
@@ -95,7 +97,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
                 }`}
             >
               <Bed className="w-4 h-4 text-amber-700" />
-              <span>Upper Deck</span>
+              <span>{t('upper_deck')}</span>
             </button>
           </div>
         )}
@@ -105,24 +107,24 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
       <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-slate-600 bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-md border-2 border-slate-300 bg-white" />
-          <span>Available</span>
+          <span>{t('seat_available')}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-md bg-amber-600 text-white flex items-center justify-center">
             <Check className="w-2.5 h-2.5 stroke-[3]" />
           </div>
-          <span className="font-bold text-amber-900">Selected</span>
+          <span className="font-bold text-amber-900">{t('seat_selected')}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-md bg-amber-100 border border-amber-300" />
-          <span>On Hold</span>
+          <span>{t('seat_hold')}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-md bg-slate-200 border border-slate-300" />
-          <span>Booked</span>
+          <span>{t('seat_booked')}</span>
         </div>
       </div>
 
@@ -134,12 +136,12 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
           <div className="flex items-center justify-between pb-5 mb-5 border-b-2 border-dashed border-slate-300">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-white px-3 py-1.5 rounded-xl border border-slate-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Front Door</span>
+              <span>{t('front_door')}</span>
             </div>
 
             {/* Steering Wheel */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-200 border border-slate-300 text-slate-700">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Driver</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider">{t('driver')}</span>
               <Disc className="w-4 h-4 text-slate-600" />
             </div>
           </div>
@@ -176,7 +178,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
           {backRowSeats.length > 0 && (
             <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center mb-2">
-                Rear Back Row
+                {t('rear_back_row')}
               </div>
               <div className="flex items-center justify-between gap-1 sm:gap-1.5">
                 {backRowSeats.map((seat) => renderSeatButton(seat, true))}
@@ -188,7 +190,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
       </div>
 
       <div className="text-center text-xs text-slate-400">
-        Select up to 60 seats for your family & friends
+        {t('select_seats_hint')}
       </div>
 
     </div>

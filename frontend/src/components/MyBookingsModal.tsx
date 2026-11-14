@@ -3,6 +3,7 @@ import { X, Ticket, Clock, CheckCircle2, AlertTriangle, Sparkles, RefreshCw, Pho
 import { BookingRecord } from '../types';
 import { fetchMyBookings } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MyBookingsModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const MyBookingsModal: React.FC<MyBookingsModalProps> = ({
   onOpenLoginModal,
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export const MyBookingsModal: React.FC<MyBookingsModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Meri Bookings (My Tour Bookings)
+                {t('my_bookings_title')}
               </h3>
               <p className="text-xs text-slate-500">
                 Real-time booking status & official verification pass

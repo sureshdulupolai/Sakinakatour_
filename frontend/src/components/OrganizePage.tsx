@@ -4,6 +4,7 @@ import {
   Send, ShieldCheck, Laptop, Users, Calendar, MapPin, Check
 } from 'lucide-react';
 import { PublicSettings } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OrganizePageProps {
   settings: PublicSettings;
@@ -16,6 +17,7 @@ export const OrganizePage: React.FC<OrganizePageProps> = ({
   onBackToHome,
   onNavigateToBook,
 }) => {
+  const { t } = useLanguage();
   const whatsappUrl = settings.whatsapp_group_link || 'https://chat.whatsapp.com/G51k2L4x9diwaliYatraGroup';
   const organizerPhone = settings.contact_phone || '+91 98200 45678';
 
@@ -72,7 +74,7 @@ export const OrganizePage: React.FC<OrganizePageProps> = ({
           className="inline-flex items-center gap-2 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3.5 py-1.5 rounded-xl transition-all mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Wapas Home Page Par Jayein</span>
+          <span>{t('back')}</span>
         </button>
 
         <div className="max-w-3xl space-y-3">
@@ -81,10 +83,10 @@ export const OrganizePage: React.FC<OrganizePageProps> = ({
             <span>Tour Organizers & Group Leaders Platform</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-slate-950 font-serif-heading tracking-tight leading-tight">
-            Apna Tour Sakinaka Platform Par List Karein
+            {t('organize_hero_title')}
           </h1>
           <p className="text-base text-slate-600 leading-relaxed">
-            Agar aapke paas koi booking website nahi hai, toh chinta mat kijiye. Chahe <strong>Family Yatra</strong> ho, <strong>Friends/Boys Group Trip</strong> ya <strong>Devotional Pilgrimage</strong> — hum aapke tour ke liye dynamic seating layout, automated OTP booking aur admin dashboard free me setup karenge.
+            {t('organize_hero_desc')}
           </p>
         </div>
       </div>
