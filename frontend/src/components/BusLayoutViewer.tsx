@@ -87,9 +87,14 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
             </span>
           )}
         </div>
-        <p className="text-xs text-slate-500 mt-1 font-medium">
-          {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Executive AC Sleeper' : 'Air-Suspension Pushback AC Coach'} • {t('select_seats_title')}
-        </p>
+        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
+          <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+            {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Executive AC Sleeper' : 'Air-Suspension Pushback AC Coach'}
+          </span>
+          <span className="text-slate-500 font-medium">
+            {t('select_seats_title')}
+          </span>
+        </div>
       </div>
 
       {/* Sleek Compact Segmented Deck Switcher */}

@@ -46,6 +46,7 @@ class PassengerDetail(BaseModel):
     name: str
     age: Optional[int] = None
     gender: Optional[str] = None
+    phone: Optional[str] = None
     seat_number: str
     is_primary: bool = False
 

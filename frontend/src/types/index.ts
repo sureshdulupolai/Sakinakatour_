@@ -61,6 +61,7 @@ export interface PassengerDetail {
   name: string;
   age?: number;
   gender?: string;
+  phone?: string;
   seat_number: string;
   is_primary?: boolean;
 }

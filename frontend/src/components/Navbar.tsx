@@ -32,11 +32,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => onNavigate('/')}
           className="flex items-center gap-3 cursor-pointer select-none"
         >
-          <div className="w-10 h-10 rounded-full ring-2 ring-amber-400/80 p-0.5 flex items-center justify-center overflow-hidden bg-slate-950 shrink-0">
+          <div className="w-10 h-10 rounded-full border-2 border-amber-400/80 p-0.5 flex items-center justify-center overflow-hidden bg-slate-950 shrink-0">
             <img
               src="/krishh_logo_circle.png"
               alt="Krishh Logo"
-              className="w-full h-full object-cover rounded-full transition-transform duration-300 ease-out hover:scale-115 cursor-pointer"
+              className="w-full h-full object-cover rounded-full transition-transform duration-300 ease-out hover:scale-110 cursor-pointer"
               onError={(e) => {
                 e.currentTarget.src = "/krishh_logo.png";
               }}
@@ -52,34 +52,45 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Clean, Dedicated Page Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs sm:text-sm font-semibold text-slate-600">
+        {/* Pure Clean Typography Navigation Links (Zero dots, zero lines, zero boxes) */}
+        <nav className="hidden md:flex items-center gap-8 text-sm">
           <button
+            type="button"
             onClick={() => onNavigate('/')}
-            className={`transition-colors py-1 ${
-              currentPath === '/' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
+            className={`transition-colors select-none font-semibold ${
+              currentPath === '/'
+                ? 'text-amber-700 font-bold'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             {t('nav_home')}
           </button>
 
           <button
+            type="button"
             onClick={() => onNavigate('/book')}
-            className={`transition-colors py-1 ${
-              currentPath === '/book' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
+            className={`transition-colors select-none font-semibold ${
+              currentPath === '/book'
+                ? 'text-amber-700 font-bold'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             {t('nav_book')}
           </button>
 
           <button
+            type="button"
             onClick={() => onNavigate('/organize')}
-            className={`transition-colors py-1 flex items-center gap-1.5 ${
-              currentPath === '/organize' ? 'text-amber-800 font-bold border-b-2 border-amber-600' : 'hover:text-slate-900'
+            className={`transition-colors select-none font-semibold flex items-center gap-1.5 ${
+              currentPath === '/organize'
+                ? 'text-amber-700 font-bold'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <span>{t('nav_organize')}</span>
-            <span className="text-[10px] uppercase font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md">New</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md">
+              New
+            </span>
           </button>
         </nav>
 

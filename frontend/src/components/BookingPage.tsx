@@ -170,7 +170,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({
                     </h3>
                     {!isBusOpen && activeBus && (
                       <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
-                        Selected: <strong className="text-slate-800">{activeBus.name}</strong> • ₹{activeBus.base_price.toLocaleString('en-IN')}/seat
+                        Selected: <strong className="text-slate-800">{activeBus.name}</strong> <span className="text-amber-800 font-bold ml-1">(₹{activeBus.base_price.toLocaleString('en-IN')}/seat)</span>
                       </p>
                     )}
                   </div>

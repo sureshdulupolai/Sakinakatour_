@@ -84,6 +84,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
       const primaryName = user ? user.name : (userName || 'Primary Devotee');
       const primaryAge = user?.age || (userAge ? parseInt(userAge) : undefined);
       const primaryGender = user?.gender || userGender;
+      const primaryPhone = user?.phone || phone;
 
       const newPassengers: PassengerDetail[] = selectedSeats.map((seatNum, idx) => {
         if (idx === 0) {
@@ -92,12 +93,14 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
             name: primaryName,
             age: primaryAge,
             gender: primaryGender,
+            phone: primaryPhone,
             is_primary: true,
           };
         }
         return {
           seat_number: seatNum,
-          name: `${primaryName} (Guest ${idx + 1})`,
+          name: '',
+          phone: '',
           age: undefined,
           gender: 'Unspecified',
           is_primary: false,
@@ -188,6 +191,24 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
     showToast('info', 'Names Auto-filled', 'Co-passengers ke naam auto-set kar diye gaye hain.');
   };
 
+  const handleProceedToStep3 = () => {
+    for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      if (!p.name || !p.name.trim()) {
+        showToast('error', 'Name Required', `Kripya Seat ${p.seat_number} ke yatri ka shubh naam dalein.`);
+        return;
+      }
+      if (p.phone && p.phone.trim()) {
+        const cleanP = p.phone.replace(/[^\d]/g, '');
+        if (cleanP.length !== 10) {
+          showToast('error', 'Invalid Mobile', `Seat ${p.seat_number} ka 10-digit valid mobile number dalein (ya blank chhodein).`);
+          return;
+        }
+      }
+    }
+    setStep(3);
+  };
+
   const activeUpiVpa = settings?.upi_vpa || (import.meta.env.VITE_DEFAULT_UPI_VPA as string) || 'sakinakadiwali@upi';
   const activeUpiName = settings?.upi_name || 'Sakinaka Tour Yatra';
 
@@ -251,13 +272,25 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
             </span>
             <div className="leading-tight">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                {step === 1 && t('modal_step1')}
-                {step === 2 && t('modal_step2')}
-                {step === 3 && t('modal_step3')}
+                {step === 1 && 'Step 1: Contact Details'}
+                {step === 2 && 'Step 2: Passenger Details'}
+                {step === 3 && 'Step 3: Advance Payment'}
               </h3>
-              <p className="text-[11px] text-slate-500">
-                {selectedSeats.length} {t('seats_selected_count')}: <span className="font-mono font-bold text-amber-800">{selectedSeats.join(', ')}</span> • ₹{totalAmount.toLocaleString('en-IN')}
-              </p>
+              <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <span className="text-[11px] font-bold text-slate-500">
+                  {selectedSeats.length} Seats:
+                </span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {selectedSeats.map((s) => (
+                    <span key={s} className="font-mono text-[10px] font-black bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs font-black text-slate-900 ml-1">
+                  ₹{totalAmount.toLocaleString('en-IN')}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -397,70 +430,123 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
 
           {/* STEP 2: PASSENGERS */}
           {step === 2 && (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">
-                  {passengers.length} {t('passenger')}
-                </span>
+                <div>
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                    Passenger Details ({passengers.length} Yatri)
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Name is required. Mobile no is optional (allows login later).
+                  </span>
+                </div>
                 {passengers.length > 1 && (
                   <button
+                    type="button"
                     onClick={handleAutoFillFamily}
-                    className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 flex items-center gap-1"
+                    className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 flex items-center gap-1 transition-colors"
                   >
                     <Sparkles className="w-3 h-3 text-amber-600" />
-                    <span>{t('auto_fill_family')}</span>
+                    <span>Auto-fill Family</span>
                   </button>
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {passengers.map((p, index) => (
                   <div
                     key={index}
-                    className={`p-2.5 rounded-xl border ${
-                      p.is_primary ? 'bg-amber-50/40 border-amber-200' : 'bg-slate-50/50 border-slate-200'
+                    className={`p-3 rounded-2xl border transition-all ${
+                      p.is_primary ? 'bg-amber-50/50 border-amber-300' : 'bg-slate-50 border-slate-200'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="font-mono text-[11px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded">
-                        {p.seat_number}
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-700">
-                        {p.is_primary ? t('primary_devotee') : `${t('passenger')} ${index + 1}`}
-                      </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black bg-slate-950 text-amber-400 px-2 py-0.5 rounded-md">
+                          Seat {p.seat_number}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {p.is_primary ? 'Primary Contact (Main Devotee)' : `Co-Passenger ${index + 1}`}
+                        </span>
+                      </div>
+                      {p.is_primary && (
+                        <span className="text-[10px] font-extrabold uppercase bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                          Primary
+                        </span>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-12 gap-2">
-                      <div className="col-span-6">
-                        <input
-                          type="text"
-                          value={p.name}
-                          onChange={(e) => handleUpdatePassenger(index, 'name', e.target.value)}
-                          placeholder={`${t('passenger')} ${index + 1}`}
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium"
-                        />
+                    <div className="space-y-2">
+                      {/* Name & Mobile Number */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                            Full Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={p.name}
+                            onChange={(e) => handleUpdatePassenger(index, 'name', e.target.value)}
+                            placeholder={p.is_primary ? 'Main Devotee Name' : `Passenger ${index + 1} Name`}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-500 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                            Mobile No {p.is_primary ? '*' : '(Optional for Login)'}
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1.5 text-xs font-semibold text-slate-400">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              maxLength={10}
+                              value={p.phone || (p.is_primary ? (user?.phone || phone) : '')}
+                              disabled={p.is_primary}
+                              onChange={(e) => handleUpdatePassenger(index, 'phone', e.target.value.replace(/[^\d]/g, ''))}
+                              placeholder={p.is_primary ? phone : '98200XXXXX'}
+                              className={`w-full pl-9 pr-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-amber-500 ${
+                                p.is_primary ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900'
+                              }`}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="col-span-3">
-                        <input
-                          type="number"
-                          min="1"
-                          max="100"
-                          value={p.age || ''}
-                          onChange={(e) => handleUpdatePassenger(index, 'age', e.target.value ? parseInt(e.target.value) : undefined)}
-                          placeholder={t('age')}
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <select
-                          value={p.gender || 'Unspecified'}
-                          onChange={(e) => handleUpdatePassenger(index, 'gender', e.target.value)}
-                          className="w-full px-1.5 py-1.5 rounded-lg border border-slate-300 text-xs font-medium bg-white"
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                        </select>
+
+                      {/* Age & Gender */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                            Age (Optional)
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={p.age || ''}
+                            onChange={(e) => handleUpdatePassenger(index, 'age', e.target.value ? parseInt(e.target.value) : undefined)}
+                            placeholder="Jaise: 38"
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:border-amber-500 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                            Gender
+                          </label>
+                          <select
+                            value={p.gender || 'Unspecified'}
+                            onChange={(e) => handleUpdatePassenger(index, 'gender', e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:border-amber-500"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Unspecified">Unspecified</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -469,6 +555,7 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
                   className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1"
                 >
@@ -477,7 +564,8 @@ export const FamilyBookingModal: React.FC<FamilyBookingModalProps> = ({
                 </button>
 
                 <button
-                  onClick={() => setStep(3)}
+                  type="button"
+                  onClick={handleProceedToStep3}
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5"
                 >
                   <span>{t('modal_step3')}</span>

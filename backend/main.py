@@ -476,11 +476,13 @@ def create_booking(
     for idx, seat_num in enumerate(req.selected_seats, start=1):
         if seat_num in provided_map and provided_map[seat_num].name.strip():
             p = provided_map[seat_num]
+            p_phone = p.phone.strip() if p.phone and p.phone.strip() else (req.primary_phone if idx == 1 else None)
             processed_passengers.append({
                 "seat_number": seat_num,
                 "name": p.name.strip(),
                 "age": p.age if p.age else (req.primary_age if idx == 1 else None),
                 "gender": p.gender if p.gender else (req.primary_gender if idx == 1 else "Unspecified"),
+                "phone": p_phone,
                 "is_primary": (idx == 1)
             })
         else:
@@ -490,6 +492,7 @@ def create_booking(
                 "name": member_name,
                 "age": req.primary_age if idx == 1 else None,
                 "gender": req.primary_gender if idx == 1 else "Unspecified",
+                "phone": req.primary_phone if idx == 1 else None,
                 "is_primary": (idx == 1)
             })
 
@@ -551,8 +554,13 @@ def get_my_bookings(current_user: User = Depends(get_current_user), db: Session 
     STRICT PRIVACY: Returns only this authenticated user's bookings.
     Discount applied by admin is strictly visible only to this user!
     """
+    # Allows primary devotee OR co-passengers (if phone was provided during multi-booking) to view this booking!
     bookings = db.query(Booking).filter(
-        Booking.user_id == current_user.id
+        or_(
+            Booking.user_id == current_user.id,
+            Booking.primary_phone == current_user.phone,
+            Booking.passengers_json.like(f"%{current_user.phone}%")
+        )
     ).order_by(Booking.id.desc()).all()
 
     results = []
@@ -787,11 +795,13 @@ def create_direct_booking_admin(
     for idx, seat_num in enumerate(req.selected_seats, start=1):
         if seat_num in provided_map and provided_map[seat_num].name.strip():
             p = provided_map[seat_num]
+            p_phone = p.phone.strip() if p.phone and p.phone.strip() else (req.primary_phone if idx == 1 else None)
             processed_passengers.append({
                 "seat_number": seat_num,
                 "name": p.name.strip(),
                 "age": p.age if p.age else (req.primary_age if idx == 1 else None),
                 "gender": p.gender if p.gender else (req.primary_gender if idx == 1 else "Unspecified"),
+                "phone": p_phone,
                 "is_primary": (idx == 1)
             })
         else:
@@ -801,6 +811,7 @@ def create_direct_booking_admin(
                 "name": member_name,
                 "age": req.primary_age if idx == 1 else None,
                 "gender": req.primary_gender if idx == 1 else "Unspecified",
+                "phone": req.primary_phone if idx == 1 else None,
                 "is_primary": (idx == 1)
             })
 

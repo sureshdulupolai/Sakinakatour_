@@ -252,22 +252,22 @@ export function App() {
         )}
       </main>
 
-      {/* World-Class Fixed Bottom Action Bar (redBus Prima / MakeMyTrip standard) */}
+      {/* World-Class Fixed Bottom Action Bar (100% Solid Opaque, High-Contrast) */}
       {selectedSeatNumbers.length > 0 && activeBus && currentPath === '/book' && (
-        <div className="fixed bottom-0 inset-x-0 z-50 bg-white/98 backdrop-blur-md border-t-2 border-slate-200 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-0 inset-x-0 z-50 bg-slate-950 border-t border-slate-800 animate-in slide-in-from-bottom duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
             
             {/* Left Column: Selected Seat Tags with counts */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                   Selected Seats ({selectedSeatNumbers.length})
                 </span>
                 <div className="flex items-center gap-1.5 flex-wrap mt-1">
                   {selectedSeatNumbers.map((sn) => (
                     <span
                       key={sn}
-                      className="inline-flex items-center gap-1 font-mono text-xs font-black bg-amber-50 text-amber-950 border border-amber-300 px-2 py-0.5 rounded-lg"
+                      className="inline-flex items-center gap-1 font-mono text-xs font-black bg-slate-900 text-amber-400 border border-amber-500/50 px-2.5 py-1 rounded-lg"
                     >
                       <span>{sn}</span>
                     </span>
@@ -277,16 +277,16 @@ export function App() {
             </div>
 
             {/* Middle / Right Column: Live Fare & Primary Proceed CTA */}
-            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
+            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-slate-800/80 pt-2 sm:pt-0">
               <div className="text-left sm:text-right">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">
                   Total Payable
                 </span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                     ₹{selectedTotalAmount.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
                     All-Inclusive
                   </span>
                 </div>
@@ -295,7 +295,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => setIsBookingModalOpen(true)}
-                className="px-5 sm:px-7 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm transition-all flex items-center gap-2 border-2 border-amber-600 shadow-none shrink-0"
+                className="px-6 sm:px-8 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm transition-all flex items-center gap-2 border-2 border-amber-400 shadow-none shrink-0"
               >
                 <span>{t('proceed_to_book')}</span>
                 <ArrowRight className="w-4 h-4 stroke-[3]" />
