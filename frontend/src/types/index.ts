@@ -31,6 +31,7 @@ export interface BusSummary {
 
 export interface TourTrip {
   id: number;
+  slug?: string;
   title: string;
   month_label: string;
   start_date: string;
@@ -42,7 +43,33 @@ export interface TourTrip {
   inclusions: string[];
   poster_image?: string;
   contact_phone: string;
+  operator_name?: string;
+  category?: string;
+  duration_days?: string;
+  pickup_location?: string;
+  rating?: number;
+  review_count?: number;
   buses: BusSummary[];
+}
+
+export interface PartnerTourPayload {
+  title: string;
+  category: string;
+  month_label: string;
+  start_date: string;
+  end_date: string;
+  duration_days: string;
+  pickup_location: string;
+  operator_name: string;
+  contact_phone: string;
+  description?: string;
+  itinerary: string[];
+  inclusions: string[];
+  poster_image?: string;
+  bus_name: string;
+  bus_type: string;
+  total_rows: number;
+  base_price: number;
 }
 
 export interface SeatItem {

@@ -177,23 +177,23 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigate('/book')}
+                  onClick={() => onNavigate('/packages')}
                   className={`hover:text-amber-400 transition-colors text-left ${
-                    currentPath === '/book' ? 'text-amber-400 font-bold' : 'text-slate-400'
+                    currentPath.startsWith('/packages') || currentPath.startsWith('/tours') ? 'text-amber-400 font-bold' : 'text-slate-400'
                   }`}
                 >
-                  Book Seats & Coaches
+                  All Tour Packages
                 </button>
               </li>
               <li>
                 <button
                   type="button"
-                  onClick={() => onNavigate('/organize')}
+                  onClick={() => onNavigate('/partner/list-tour')}
                   className={`hover:text-amber-400 transition-colors text-left ${
-                    currentPath === '/organize' ? 'text-amber-400 font-bold' : 'text-slate-400'
+                    currentPath.startsWith('/partner') || currentPath === '/organize' ? 'text-amber-400 font-bold' : 'text-slate-400'
                   }`}
                 >
-                  List / Organize a Tour
+                  Partner Studio (List Your Tour)
                 </button>
               </li>
               <li>

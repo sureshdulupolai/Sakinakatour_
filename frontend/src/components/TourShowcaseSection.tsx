@@ -1,11 +1,13 @@
 import React from 'react';
-import { Calendar, Bus, CheckCircle2, ArrowRight, Sparkles, MapPin, ShieldCheck, PlusCircle } from 'lucide-react';
+import { Calendar, Bus, CheckCircle2, ArrowRight, Sparkles, MapPin, ShieldCheck, PlusCircle, Eye, ArrowUpRight } from 'lucide-react';
 import { TourTrip } from '../types';
 
 interface TourShowcaseSectionProps {
   trips: TourTrip[];
   isLoading?: boolean;
-  onSelectTripToBook: (tripId: number) => void;
+  onSelectTripToBook: (trip: TourTrip) => void;
+  onViewTripDetails?: (trip: TourTrip) => void;
+  onExploreAllTours?: () => void;
   onOrganizeTripClick?: () => void;
 }
 
@@ -39,6 +41,8 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
   trips,
   isLoading = false,
   onSelectTripToBook,
+  onViewTripDetails,
+  onExploreAllTours,
   onOrganizeTripClick,
 }) => {
   return (
@@ -46,17 +50,32 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header: Bold, Full Width & No Orphan Lines */}
-        <div className="text-center max-w-4xl lg:max-w-5xl mx-auto space-y-2.5 mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-950 text-xs font-bold tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span>Sakinaka Tour Packages</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10">
+          <div className="max-w-2xl space-y-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-100/80 border border-amber-300 text-amber-950 text-xs font-bold tracking-wide uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>Sakinaka Tour Packages</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 font-serif-heading tracking-tight text-balance">
+              Hamare Upcoming Tours & Yatras
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Family trips, spiritual pilgrimages, friends/boys group tours aur festive yatras — pure saal sabhi prakar ke verified tours yahan uplabdh hain. Apna manpasand safar chunein aur apni family ya group ke liye seats book karein.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 font-serif-heading tracking-tight text-balance">
-            Hamare Upcoming Tours & Yatras
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            Family trips, spiritual pilgrimages, friends/boys group tours aur festive yatras — pure saal sabhi prakar ke verified tours yahan uplabdh hain. Apna manpasand safar chunein aur apni family ya group ke liye seats book karein.
-          </p>
+
+          {onExploreAllTours && (
+            <div className="shrink-0 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onExploreAllTours}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition-all shadow-sm"
+              >
+                <span>View All Tours Catalog</span>
+                <ArrowUpRight className="w-4 h-4 text-amber-400" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Section: Skeleton OR Cards OR Empty State */}
@@ -122,10 +141,14 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
                         </span>
 
                         {totalAvailableSeats > 0 ? (
-                          <span className="px-3 py-1 rounded-md bg-emerald-600 text-white text-xs font-bold shrink-0 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => onSelectTripToBook(trip)}
+                            className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 flex items-center gap-1.5 transition-all cursor-pointer shadow"
+                          >
                             <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                            {totalAvailableSeats} Seats Left
-                          </span>
+                            <span>{totalAvailableSeats} Seats Available</span>
+                          </button>
                         ) : (
                           <span className="px-3 py-1 rounded-md bg-rose-600 text-white text-xs font-bold shrink-0">
                             Fast Filling / Waitlist
@@ -145,9 +168,30 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
                     {/* Card Body: Prominent Typography & Strong Contrast */}
                     <div className="p-5 sm:p-6 space-y-4">
                       
+                      {/* CRITICAL USER REQUIREMENT: Show who listed the tour (Admin or Partner) */}
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                        <div className="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                          {(trip.operator_name || 'S').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-extrabold text-amber-900 uppercase tracking-wider block leading-tight">
+                            Listed by Tour Host:
+                          </span>
+                          <span className="text-xs font-bold text-slate-900 truncate block">
+                            {trip.operator_name || 'Suresh Bhai (Official Sakinaka Admin)'}
+                          </span>
+                        </div>
+                        <span title="Verified Tour Organizer">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                        </span>
+                      </div>
+
                       {/* Trip Title: BOLD & PROMINENT */}
                       <div className="space-y-1.5">
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-serif-heading line-clamp-2 leading-tight group-hover:text-amber-700 transition-colors">
+                        <h3 
+                          onClick={() => onViewTripDetails && onViewTripDetails(trip)}
+                          className="text-xl sm:text-2xl font-black text-slate-900 font-serif-heading line-clamp-2 leading-tight group-hover:text-amber-700 transition-colors cursor-pointer"
+                        >
                           {trip.title}
                         </h3>
                         
@@ -213,7 +257,7 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Card Footer: Starting Price BOLD & Prominent CTA Button */}
+                  {/* Card Footer: Starting Price BOLD & Prominent Dual CTA Buttons */}
                   <div className="px-5 sm:px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
@@ -225,13 +269,26 @@ export const TourShowcaseSection: React.FC<TourShowcaseSectionProps> = ({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => onSelectTripToBook(trip.id)}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
-                    >
-                      <span>View Buses & Book Seats</span>
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {onViewTripDetails && (
+                        <button
+                          type="button"
+                          onClick={() => onViewTripDetails(trip)}
+                          className="px-4 py-3 rounded-xl border border-slate-300 hover:bg-white text-slate-800 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shrink-0"
+                        >
+                          <Eye className="w-4 h-4 text-slate-500" />
+                          <span>Tour Details</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => onSelectTripToBook(trip)}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0 shadow-sm"
+                      >
+                        <Bus className="w-4 h-4" />
+                        <span>Select Seats</span>
+                      </button>
+                    </div>
                   </div>
 
                 </div>

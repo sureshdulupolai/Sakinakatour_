@@ -37,6 +37,7 @@ class TourTrip(Base):
     __tablename__ = "tour_trips"
 
     id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(200), unique=True, index=True, nullable=True)
     title = Column(String(200), nullable=False)
     month_label = Column(String(50), nullable=False)  # e.g. "Diwali Special (Nov 2026)", "New Year (Jan 2027)"
     start_date = Column(String(50), nullable=False)
@@ -48,10 +49,18 @@ class TourTrip(Base):
     inclusions_json = Column(Text, default="[]")  # List of amenities provided in price
     poster_image = Column(String(500), nullable=True)
     contact_phone = Column(String(20), default="+91 9876543210")
+    operator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    operator_name = Column(String(150), default="Suresh Bhai (Official Sakinaka Admin)")
+    category = Column(String(100), default="Spiritual Pilgrimage")
+    duration_days = Column(String(50), default="3 Days / 2 Nights")
+    pickup_location = Column(String(200), default="Sakinaka Metro, Andheri East, Mumbai")
+    rating = Column(Float, default=4.9)
+    review_count = Column(Integer, default=128)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     buses = relationship("Bus", back_populates="trip", cascade="all, delete-orphan")
     bookings = relationship("Booking", back_populates="trip")
+    operator = relationship("User", foreign_keys=[operator_id])
 
 
 class Bus(Base):
@@ -59,6 +68,7 @@ class Bus(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     trip_id = Column(Integer, ForeignKey("tour_trips.id"), nullable=False)
+    operator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String(100), nullable=False)  # e.g. "Bus 1 - Luxury AC Coach"
     bus_number = Column(String(50), nullable=True, default="")  # e.g. "MH-03-BZ-2026" or empty (allotted on trip day)
     bus_type = Column(String(50), default="seater_2x2")  # "seater_2x2", "seater_3x2", "sleeper_2x1", "custom"
@@ -156,4 +166,22 @@ class Setting(Base):
     key = Column(String(50), primary_key=True)
     value = Column(Text, nullable=False)
     description = Column(String(200), nullable=True)
+
+
+class PartnerInquiry(Base):
+    __tablename__ = "partner_inquiries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    phone = Column(String(15), index=True, nullable=False)
+    city = Column(String(100), nullable=False)
+    location_address = Column(Text, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    fleet_size = Column(String(50), default="1-2 Buses")  # "1-2 Buses", "3-5 Buses", "5+ Buses", "Tour Guide/Organizer"
+    status = Column(String(30), default="PENDING")  # "PENDING", "APPROVED", "REJECTED"
+    notes = Column(Text, nullable=True)
+    client_ip = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 

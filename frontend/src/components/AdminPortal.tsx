@@ -384,6 +384,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         inclusions: tripInclusions.split(',').map((s) => s.trim()).filter(Boolean),
         poster_image: '/Balaji_temple_in_ketkawla.jpg',
         contact_phone: '+91 98200 45678',
+        operator_name: user?.name || 'Suresh Bhai (Official Sakinaka Admin)',
+        category: 'Spiritual Pilgrimage',
+        duration_days: '3 Days / 2 Nights',
+        pickup_location: 'Sakinaka Metro, Andheri East, Mumbai',
       });
       showToast('success', 'Tour Trip Created!', 'New multi-month trip added.');
       setTripTitle('');

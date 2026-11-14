@@ -25,19 +25,31 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-    # Safe migration for new columns in buses
+    # Safe migration for new columns across tables
     with engine.connect() as conn:
         try:
             from sqlalchemy import inspect
             insp = inspect(engine)
-            existing_cols = [c['name'] for c in insp.get_columns('buses')]
-            if 'has_back_row' not in existing_cols:
-                conn.exec_driver_sql("ALTER TABLE buses ADD COLUMN has_back_row BOOLEAN DEFAULT 1;")
-            if 'numbering_pattern' not in existing_cols:
-                conn.exec_driver_sql("ALTER TABLE buses ADD COLUMN numbering_pattern VARCHAR(50) DEFAULT 'continuous_rl';")
+            
+            # 1. Buses table migrations
+            if 'buses' in insp.get_table_names():
+                existing_cols = [c['name'] for c in insp.get_columns('buses')]
+                if 'has_back_row' not in existing_cols:
+                    conn.exec_driver_sql("ALTER TABLE buses ADD COLUMN has_back_row BOOLEAN DEFAULT 1;")
+                if 'numbering_pattern' not in existing_cols:
+                    conn.exec_driver_sql("ALTER TABLE buses ADD COLUMN numbering_pattern VARCHAR(50) DEFAULT 'continuous_rl';")
+                if 'operator_id' not in existing_cols:
+                    conn.exec_driver_sql("ALTER TABLE buses ADD COLUMN operator_id INTEGER DEFAULT NULL;")
+
+            # 2. Tour trips table migrations
+            if 'tour_trips' in insp.get_table_names():
+                trip_cols = [c['name'] for c in insp.get_columns('tour_trips')]
+                if 'operator_id' not in trip_cols:
+                    conn.exec_driver_sql("ALTER TABLE tour_trips ADD COLUMN operator_id INTEGER DEFAULT NULL;")
+
             conn.commit()
-        except Exception:
-            pass
+        except Exception as e:
+            print("DB Migration notice:", e)
 
 def get_db():
     db = SessionLocal()

@@ -1,4 +1,4 @@
-import { TourTrip, SeatItem, BookingRecord, PublicSettings, UserProfile } from '../types';
+import { TourTrip, SeatItem, BookingRecord, PublicSettings, UserProfile, PartnerTourPayload } from '../types';
 
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api';
 const BASE_HOST = import.meta.env.VITE_API_BASE_URL || '';
@@ -218,4 +218,18 @@ export async function fetchManifest(busId: number): Promise<any> {
   });
   if (!res.ok) throw new Error('Failed to fetch manifest');
   return res.json();
+}
+
+export async function createPartnerTour(payload: PartnerTourPayload): Promise<any> {
+  const res = await fetch(`${API_BASE}/partner/tours`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getSecurityHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Failed to list partner tour');
+  return data;
 }

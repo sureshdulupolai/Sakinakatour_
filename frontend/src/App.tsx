@@ -12,6 +12,8 @@ import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { SocialConnect } from './components/SocialConnect';
 import { TourShowcaseSection } from './components/TourShowcaseSection';
+import { TourCatalogPage } from './components/TourCatalogPage';
+import { TourDetailsPage } from './components/TourDetailsPage';
 import { OrganizePage } from './components/OrganizePage';
 import { BookingPage } from './components/BookingPage';
 import { FamilyBookingModal } from './components/FamilyBookingModal';
@@ -26,11 +28,67 @@ export function App() {
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  // Navigation path routing: '/' for Home Showcase, '/book' for Dedicated Seating Grid, '/organize' for Listing
-  const [currentPath, setCurrentPath] = useState<string>(() => {
-    const path = window.location.pathname;
-    return ['/book', '/organize'].includes(path) ? path : '/';
+  // Generate or return clean, URL-safe slug for tour package
+  const getTripSlug = (trip?: TourTrip): string => {
+    if (!trip) return '';
+    return (
+      trip.slug ||
+      trip.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/(^-|-$)/g, '') ||
+      String(trip.id)
+    );
+  };
+
+  // Helper to normalize path into clean top-level views
+  const normalizeRoute = (pathname: string): 'home' | 'packages' | 'package-details' | 'booking' | 'partner' => {
+    if (pathname === '/book' || pathname === '/booking' || pathname.startsWith('/booking/')) {
+      return 'booking';
+    }
+    if (pathname === '/packages' || pathname === '/tours' || pathname === '/catalog') {
+      return 'packages';
+    }
+    if (pathname.startsWith('/packages/') || pathname.startsWith('/tours/')) {
+      return 'package-details';
+    }
+    if (pathname === '/partner' || pathname.startsWith('/partner') || pathname === '/organize') {
+      return 'partner';
+    }
+    return 'home';
+  };
+
+  // Extract slug or identifier from path or query (prevents exposing raw IDs in URLs)
+  const extractTourIdentifier = (path: string): string | null => {
+    try {
+      const search = window.location.search;
+      if (search) {
+        const params = new URLSearchParams(search);
+        const q = params.get('package') || params.get('tour') || params.get('trip') || params.get('tripId') || params.get('id');
+        if (q) return q.trim();
+      }
+      // Check /booking/:slug/seats or /booking/:slug
+      const bookingMatch = path.match(/\/booking\/([^/]+)/);
+      if (bookingMatch && bookingMatch[1] && bookingMatch[1] !== 'seats') {
+        return decodeURIComponent(bookingMatch[1]).trim();
+      }
+      // Check /packages/:slug or /tours/:slug
+      const packageMatch = path.match(/\/(?:packages|tours)\/([^/]+)/);
+      if (packageMatch && packageMatch[1]) {
+        return decodeURIComponent(packageMatch[1]).trim();
+      }
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  };
+
+  // Navigation path routing: clean state with slug tracking
+  const [currentPath, setCurrentPath] = useState<'home' | 'packages' | 'package-details' | 'booking' | 'partner'>(() => {
+    return normalizeRoute(window.location.pathname);
   });
+  const [activeTourSlug, setActiveTourSlug] = useState<string | null>(() => extractTourIdentifier(window.location.pathname));
 
   // App data state
   const [trips, setTrips] = useState<TourTrip[]>([]);
@@ -66,18 +124,43 @@ export function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Find trip by slug OR by id (secure lookup, no sequential ID exposure)
+  const findTrip = (slugOrId: string | number | null): TourTrip | undefined => {
+    if (!slugOrId) return undefined;
+    const clean = String(slugOrId).toLowerCase().trim();
+    return trips.find((t) => (t.slug && t.slug.toLowerCase() === clean) || String(t.id) === clean);
+  };
+
   // Browser navigation popstate handler
   useEffect(() => {
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname === '/book' ? '/book' : '/');
+      const norm = normalizeRoute(window.location.pathname);
+      setCurrentPath(norm);
+      const ident = extractTourIdentifier(window.location.pathname);
+      if (ident) {
+        setActiveTourSlug(ident);
+        const found = findTrip(ident);
+        if (found) {
+          handleSelectTrip(found);
+        }
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [trips]);
 
   const navigate = (path: string) => {
     window.history.pushState({}, '', path);
-    setCurrentPath(path);
+    const norm = normalizeRoute(path.split('?')[0]);
+    setCurrentPath(norm);
+    const ident = extractTourIdentifier(path);
+    if (ident) {
+      setActiveTourSlug(ident);
+      const found = findTrip(ident);
+      if (found) {
+        handleSelectTrip(found);
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -92,10 +175,20 @@ export function App() {
       setPublicSettings(settingsData);
 
       if (tripsData.length > 0) {
-        const firstTrip = tripsData[0];
-        setSelectedTripId(firstTrip.id);
-        if (firstTrip.buses.length > 0) {
-          const firstBus = firstTrip.buses[0];
+        const urlIdent = extractTourIdentifier(window.location.pathname);
+        const initialTrip =
+          (urlIdent &&
+            tripsData.find(
+              (t) =>
+                (t.slug && t.slug.toLowerCase() === urlIdent.toLowerCase()) ||
+                String(t.id) === urlIdent
+            )) ||
+          tripsData[0];
+
+        setSelectedTripId(initialTrip.id);
+        setActiveTourSlug(initialTrip.slug || String(initialTrip.id));
+        if (initialTrip.buses.length > 0) {
+          const firstBus = initialTrip.buses[0];
           setSelectedBusId(firstBus.id);
           loadSeatsForBus(firstBus.id);
         }
@@ -124,10 +217,12 @@ export function App() {
   }, []);
 
   // Handlers for switching Trip and Bus
-  const handleSelectTrip = (tripId: number) => {
-    setSelectedTripId(tripId);
-    const trip = trips.find((t) => t.id === tripId);
-    if (trip && trip.buses.length > 0) {
+  const handleSelectTrip = (tripIdOrObj: number | TourTrip) => {
+    const trip = typeof tripIdOrObj === 'object' ? tripIdOrObj : trips.find((t) => t.id === tripIdOrObj);
+    if (!trip) return;
+    setSelectedTripId(trip.id);
+    setActiveTourSlug(trip.slug || String(trip.id));
+    if (trip.buses.length > 0) {
       setSelectedBusId(trip.buses[0].id);
       loadSeatsForBus(trip.buses[0].id);
     } else {
@@ -163,9 +258,10 @@ export function App() {
     }
   };
 
-  // Active items
-  const activeTrip = trips.find((t) => t.id === selectedTripId) || trips[0];
+  // Active items resolved safely by slug or state
+  const activeTrip = (activeTourSlug && findTrip(activeTourSlug)) || trips.find((t) => t.id === selectedTripId) || trips[0];
   const activeBus = activeTrip?.buses.find((b) => b.id === selectedBusId) || activeTrip?.buses[0];
+  const currentDetailedTrip = (activeTourSlug && findTrip(activeTourSlug)) || activeTrip;
 
   // Selected total amount
   const selectedTotalAmount = selectedSeatNumbers.reduce((sum, seatNum) => {
@@ -179,7 +275,7 @@ export function App() {
 
       {/* Navbar with Krish Logo & Sakinaka Tour Branding */}
       <Navbar
-        currentPath={currentPath}
+        currentPath={window.location.pathname}
         onNavigate={navigate}
         onOpenMyBookings={() => setIsMyBookingsOpen(true)}
         onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
@@ -188,28 +284,39 @@ export function App() {
       />
 
       <main className="flex-1">
-        {/* ROUTE 1: HOME PAGE SHOWCASE (Information, Heritage, Tour Packages & Social) */}
         {/* ROUTE 1: HOME PAGE */}
-        {currentPath === '/' && (
+        {currentPath === 'home' && (
           <div>
             {/* Hero Section */}
             <HeroSection
               currentTrip={activeTrip}
-              onBookNowClick={() => navigate('/book')}
+              onBookNowClick={() => {
+                if (activeTrip) {
+                  handleSelectTrip(activeTrip);
+                  navigate('/booking/' + getTripSlug(activeTrip) + '/seats');
+                } else {
+                  navigate('/packages');
+                }
+              }}
               onOpenSocialClick={() => scrollToSection('social')}
-              onViewToursClick={() => navigate('/book')}
-              onOrganizeTripClick={() => navigate('/organize')}
+              onViewToursClick={() => navigate('/packages')}
+              onOrganizeTripClick={() => navigate('/partner/list-tour')}
             />
 
-            {/* Tour Showcase Packages (Clean overview without seating grid clutter) */}
+            {/* Tour Showcase Packages */}
             <TourShowcaseSection
               trips={trips}
               isLoading={loading}
-              onSelectTripToBook={(tripId) => {
-                handleSelectTrip(tripId);
-                navigate('/book');
+              onSelectTripToBook={(trip) => {
+                handleSelectTrip(trip);
+                navigate('/booking/' + getTripSlug(trip) + '/seats');
               }}
-              onOrganizeTripClick={() => navigate('/organize')}
+              onViewTripDetails={(trip) => {
+                setActiveTourSlug(getTripSlug(trip));
+                navigate('/packages/' + getTripSlug(trip));
+              }}
+              onExploreAllTours={() => navigate('/packages')}
+              onOrganizeTripClick={() => navigate('/partner/list-tour')}
             />
 
             {/* About Sakinaka Tour Heritage */}
@@ -220,8 +327,39 @@ export function App() {
           </div>
         )}
 
-        {/* ROUTE 2: DEDICATED SEATING & BOOKING PAGE */}
-        {currentPath === '/book' && (
+        {/* ROUTE 2: E-COMMERCE TOUR CATALOG (LIST PAGE) */}
+        {currentPath === 'packages' && (
+          <TourCatalogPage
+            trips={trips}
+            isLoading={loading}
+            onSelectTripToBook={(trip) => {
+              handleSelectTrip(trip);
+              navigate('/booking/' + getTripSlug(trip) + '/seats');
+            }}
+            onViewTripDetails={(trip) => {
+              setActiveTourSlug(getTripSlug(trip));
+              navigate('/packages/' + getTripSlug(trip));
+            }}
+            onNavigateToOrganize={() => navigate('/partner/list-tour')}
+          />
+        )}
+
+        {/* ROUTE 3: E-COMMERCE TOUR DETAILS (PRODUCT DETAILS PAGE) */}
+        {currentPath === 'package-details' && currentDetailedTrip && (
+          <TourDetailsPage
+            trip={currentDetailedTrip}
+            settings={publicSettings}
+            onBackToCatalog={() => navigate('/packages')}
+            onSelectTripToBook={(trip, busId) => {
+              handleSelectTrip(trip);
+              if (busId) handleSelectBus(busId);
+              navigate('/booking/' + getTripSlug(trip) + '/seats');
+            }}
+          />
+        )}
+
+        {/* ROUTE 4: DEDICATED SEATING & BOOKING PAGE (/booking/:slug/seats or /book) */}
+        {currentPath === 'booking' && (
           <BookingPage
             trips={trips}
             selectedTripId={selectedTripId}
@@ -230,11 +368,12 @@ export function App() {
             seats={seats}
             selectedSeatNumbers={selectedSeatNumbers}
             selectedTotalAmount={selectedTotalAmount}
-            onSelectTrip={handleSelectTrip}
+            onSelectTrip={(id) => handleSelectTrip(id)}
             onSelectBus={handleSelectBus}
             onToggleSeat={handleToggleSeat}
             onOpenBookingModal={() => setIsBookingModalOpen(true)}
             onBackToHome={() => navigate('/')}
+            onBackToCatalog={() => navigate('/packages')}
             onOpenSocialHelp={() => {
               navigate('/');
               setTimeout(() => scrollToSection('social'), 150);
@@ -242,18 +381,30 @@ export function App() {
           />
         )}
 
-        {/* ROUTE 3: DEDICATED TOUR ORGANIZERS & LISTING PAGE */}
-        {currentPath === '/organize' && (
+        {/* ROUTE 5: DEDICATED PARTNER LISTING STUDIO */}
+        {currentPath === 'partner' && (
           <OrganizePage
             settings={publicSettings}
             onBackToHome={() => navigate('/')}
-            onNavigateToBook={() => navigate('/book')}
+            onNavigateToBook={(tripId) => {
+              if (tripId) {
+                const found = trips.find((tr) => tr.id === tripId);
+                if (found) {
+                  handleSelectTrip(found);
+                  navigate('/booking/' + getTripSlug(found) + '/seats');
+                  return;
+                }
+              }
+              navigate('/packages');
+            }}
+            onNavigateToCatalog={() => navigate('/packages')}
+            onTourCreated={() => loadInitialData()}
           />
         )}
       </main>
 
       {/* World-Class Fixed Bottom Action Bar (100% Solid Opaque, High-Contrast) */}
-      {selectedSeatNumbers.length > 0 && activeBus && currentPath === '/book' && (
+      {selectedSeatNumbers.length > 0 && activeBus && currentPath === 'booking' && (
         <div className="fixed bottom-0 inset-x-0 z-50 bg-slate-950 border-t border-slate-800 animate-in slide-in-from-bottom duration-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
             

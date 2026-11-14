@@ -52,8 +52,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Pure Clean Typography Navigation Links (Zero dots, zero lines, zero boxes) */}
-        <nav className="hidden md:flex items-center gap-8 text-sm">
+        {/* Pure Clean Typography Navigation Links */}
+        <nav className="hidden md:flex items-center gap-7 text-sm">
           <button
             type="button"
             onClick={() => onNavigate('/')}
@@ -68,28 +68,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             type="button"
-            onClick={() => onNavigate('/book')}
+            onClick={() => onNavigate('/packages')}
             className={`transition-colors select-none font-semibold ${
-              currentPath === '/book'
+              currentPath.startsWith('/packages') || currentPath.startsWith('/tours')
                 ? 'text-amber-700 font-bold'
                 : 'text-slate-600 hover:text-slate-950'
             }`}
           >
-            {t('nav_book')}
+            Explore Packages
           </button>
 
           <button
             type="button"
-            onClick={() => onNavigate('/organize')}
+            onClick={() => onNavigate('/partner/list-tour')}
             className={`transition-colors select-none font-semibold flex items-center gap-1.5 ${
-              currentPath === '/organize'
+              currentPath.startsWith('/partner') || currentPath === '/organize'
                 ? 'text-amber-700 font-bold'
                 : 'text-slate-600 hover:text-slate-950'
             }`}
           >
-            <span>{t('nav_organize')}</span>
+            <span>Partner Studio</span>
             <span className="text-[10px] uppercase font-bold tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md">
-              New
+              List Tour
             </span>
           </button>
         </nav>

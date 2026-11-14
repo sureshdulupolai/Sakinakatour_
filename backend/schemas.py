@@ -150,9 +150,33 @@ class TripCreateRequest(BaseModel):
     inclusions: List[str] = []
     poster_image: Optional[str] = None
     contact_phone: Optional[str] = None
+    operator_name: Optional[str] = "Suresh Bhai (Official Sakinaka Admin)"
+    category: Optional[str] = "Spiritual Pilgrimage"
+    duration_days: Optional[str] = "3 Days / 2 Nights"
+    pickup_location: Optional[str] = "Sakinaka Metro, Andheri East, Mumbai"
+
+class PartnerTourCreateRequest(BaseModel):
+    title: str
+    category: str = "Spiritual Pilgrimage"
+    month_label: str
+    start_date: str
+    end_date: str
+    duration_days: str = "3 Days / 2 Nights"
+    pickup_location: str = "Sakinaka Metro, Andheri East, Mumbai"
+    operator_name: str
+    contact_phone: str
+    description: Optional[str] = None
+    itinerary: List[str] = []
+    inclusions: List[str] = []
+    poster_image: Optional[str] = None
+    bus_name: str = "Coach 1 - AC Deluxe Pushback"
+    bus_type: str = "seater_2x2"
+    total_rows: int = 10
+    base_price: float = 2500.0
 
 class TripResponse(BaseModel):
     id: int
+    slug: Optional[str] = None
     title: str
     month_label: str
     start_date: str
@@ -164,7 +188,54 @@ class TripResponse(BaseModel):
     inclusions: List[str]
     poster_image: Optional[str]
     contact_phone: Optional[str]
+    operator_name: Optional[str] = "Suresh Bhai (Official Sakinaka Admin)"
+    category: Optional[str] = "Spiritual Pilgrimage"
+    duration_days: Optional[str] = "3 Days / 2 Nights"
+    pickup_location: Optional[str] = "Sakinaka Metro, Andheri East, Mumbai"
+    rating: Optional[float] = 4.9
+    review_count: Optional[int] = 128
     buses: List[BusResponse] = []
 
     class Config:
         from_attributes = True
+
+class PartnerInquiryCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    phone: str = Field(..., description="10-digit Indian mobile number")
+    city: str = Field(..., min_length=2, max_length=100)
+    location_address: str = Field(..., min_length=3)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    fleet_size: Optional[str] = "1-2 Buses"
+    notes: Optional[str] = None
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        clean_num = re.sub(r"[^\d]", "", v)
+        if len(clean_num) == 12 and clean_num.startswith("91"):
+            clean_num = clean_num[2:]
+        if len(clean_num) != 10 or clean_num[0] not in "6789":
+            raise ValueError("Please provide a valid 10-digit Indian mobile number.")
+        return clean_num
+
+class PartnerInquiryResponse(BaseModel):
+    id: int
+    name: str
+    phone: str
+    city: str
+    location_address: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    fleet_size: Optional[str] = "1-2 Buses"
+    status: str
+    notes: Optional[str] = None
+    created_at: Any
+
+    class Config:
+        from_attributes = True
+
+class PartnerInquiryStatusUpdate(BaseModel):
+    status: str = Field(..., description="APPROVED or REJECTED")
+    notes: Optional[str] = None
+

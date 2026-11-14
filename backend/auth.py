@@ -62,10 +62,24 @@ def get_current_admin(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
+    """Authorizes either Platform Super Admin ('admin') or Approved Partner ('partner')"""
+    user = get_current_user(credentials, db)
+    if user.role not in ["admin", "partner"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admin or Partner authorization required."
+        )
+    return user
+
+def get_current_super_admin(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Strictly authorizes ONLY the Super Admin (Platform Owner)"""
     user = get_current_user(credentials, db)
     if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admin authorization required."
+            detail="Access denied. Master Super Admin authorization required."
         )
     return user

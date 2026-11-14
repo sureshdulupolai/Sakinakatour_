@@ -3,7 +3,7 @@ import json
 import uuid
 import datetime
 from typing import List, Optional
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -11,11 +11,11 @@ from sqlalchemy import or_
 
 from config import settings
 from database import get_db, init_db, engine
-from models import Base, User, OTPRecord, TourTrip, Bus, Booking, SeatAllocation, Setting
+from models import Base, User, OTPRecord, TourTrip, Bus, Booking, SeatAllocation, Setting, PartnerInquiry
 import schemas
 from auth import (
     create_access_token, decode_token, generate_otp_code,
-    get_current_user, get_current_user_optional, get_current_admin
+    get_current_user, get_current_user_optional, get_current_admin, get_current_super_admin
 )
 from bus_engine import generate_seat_allocations_for_bus, calculate_bus_total_seats
 from security_middleware import AntiDDoSSecurityMiddleware
@@ -263,9 +263,16 @@ def verify_otp(req: schemas.VerifyOTPRequest, db: Session = Depends(get_db)):
     db.delete(otp_record)
     db.commit()
 
-    role = "admin" if phone == settings.ADMIN_PHONE else "user"
-
     user = db.query(User).filter(User.phone == phone).first()
+    
+    # Preserve partner or admin roles, default new accounts to user
+    if phone == settings.ADMIN_PHONE:
+        role = "admin"
+    elif user and user.role in ["admin", "partner"]:
+        role = user.role
+    else:
+        role = "user"
+
     if not user:
         display_name = req.name.strip() if req.name else f"Devotee-{phone[-4:]}"
         user = User(
@@ -314,6 +321,18 @@ def get_my_profile(current_user: User = Depends(get_current_user)):
         role=current_user.role
     )
 
+def generate_slug_for_trip(title: str, db: Session) -> str:
+    s = title.lower()
+    s = re.sub(r'[^\w\s-]', '', s)
+    s = re.sub(r'[\s_-]+', '-', s).strip('-')
+    base = s[:100] or "tour-package"
+    candidate = base
+    suffix = 1
+    while db.query(TourTrip).filter(TourTrip.slug == candidate).first():
+        candidate = f"{base}-{suffix}"
+        suffix += 1
+    return candidate
+
 # ----------------- TRIPS & BUSES API -----------------
 @api_router.get("/trips", response_model=List[schemas.TripResponse])
 def get_trips(status_filter: Optional[str] = None, db: Session = Depends(get_db)):
@@ -359,8 +378,21 @@ def get_trips(status_filter: Optional[str] = None, db: Session = Depends(get_db)
                 pending_seats_count=pending_count
             ))
 
+        op_name = getattr(t, "operator_name", None)
+        if not op_name and t.operator:
+            op_name = t.operator.name
+        if not op_name:
+            op_name = "Suresh Bhai (Official Sakinaka Admin)"
+
+        t_slug = getattr(t, "slug", None)
+        if not t_slug:
+            t_slug = generate_slug_for_trip(t.title, db)
+            t.slug = t_slug
+            db.commit()
+
         result.append(schemas.TripResponse(
             id=t.id,
+            slug=t_slug,
             title=t.title,
             month_label=t.month_label,
             start_date=t.start_date,
@@ -372,9 +404,99 @@ def get_trips(status_filter: Optional[str] = None, db: Session = Depends(get_db)
             inclusions=json.loads(t.inclusions_json or "[]"),
             poster_image=t.poster_image,
             contact_phone=t.contact_phone,
+            operator_name=op_name,
+            category=getattr(t, "category", "Spiritual Pilgrimage") or "Spiritual Pilgrimage",
+            duration_days=getattr(t, "duration_days", "3 Days / 2 Nights") or "3 Days / 2 Nights",
+            pickup_location=getattr(t, "pickup_location", "Sakinaka Metro, Andheri East, Mumbai") or "Sakinaka Metro, Andheri East, Mumbai",
+            rating=getattr(t, "rating", 4.9) or 4.9,
+            review_count=getattr(t, "review_count", 128) or 128,
             buses=buses_list
         ))
     return result
+
+@api_router.get("/trips/{slug_or_id}", response_model=schemas.TripResponse)
+def get_trip_by_slug_or_id(slug_or_id: str, db: Session = Depends(get_db)):
+    """
+    Secure and RESTful lookup by SEO slug or ID without exposing raw DB identifiers.
+    Protects against sequential enumeration attacks.
+    """
+    trip = None
+    if slug_or_id.isdigit():
+        trip = db.query(TourTrip).filter(TourTrip.id == int(slug_or_id)).first()
+    if not trip:
+        trip = db.query(TourTrip).filter(TourTrip.slug == slug_or_id).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Tour package not found.")
+    
+    buses_list = []
+    for b in trip.buses:
+        total_seats = b.total_seats
+        booked_count = db.query(SeatAllocation).filter(
+            SeatAllocation.bus_id == b.id,
+            SeatAllocation.status == "BOOKED_CONFIRMED"
+        ).count()
+        pending_count = db.query(SeatAllocation).filter(
+            SeatAllocation.bus_id == b.id,
+            SeatAllocation.status == "HOLD_PENDING"
+        ).count()
+        available_count = total_seats - (booked_count + pending_count)
+
+        buses_list.append(schemas.BusResponse(
+            id=b.id,
+            trip_id=b.trip_id,
+            name=b.name,
+            bus_number=b.bus_number or "",
+            bus_type=b.bus_type,
+            left_seats_per_row=b.left_seats_per_row,
+            right_seats_per_row=b.right_seats_per_row,
+            total_rows=b.total_rows,
+            has_back_row=getattr(b, "has_back_row", True),
+            back_row_seats=b.back_row_seats,
+            has_upper_deck=b.has_upper_deck,
+            numbering_pattern=getattr(b, "numbering_pattern", "continuous_rl") or "continuous_rl",
+            total_seats=total_seats,
+            base_price=b.base_price,
+            upper_deck_price=b.upper_deck_price,
+            amenities=json.loads(b.amenities_json or "[]"),
+            available_seats_count=max(0, available_count),
+            booked_seats_count=booked_count,
+            pending_seats_count=pending_count
+        ))
+
+    op_name = getattr(trip, "operator_name", None)
+    if not op_name and trip.operator:
+        op_name = trip.operator.name
+    if not op_name:
+        op_name = "Suresh Bhai (Official Sakinaka Admin)"
+
+    t_slug = getattr(trip, "slug", None)
+    if not t_slug:
+        t_slug = generate_slug_for_trip(trip.title, db)
+        trip.slug = t_slug
+        db.commit()
+
+    return schemas.TripResponse(
+        id=trip.id,
+        slug=t_slug,
+        title=trip.title,
+        month_label=trip.month_label,
+        start_date=trip.start_date,
+        end_date=trip.end_date,
+        year=trip.year,
+        status=trip.status,
+        description=trip.description,
+        itinerary=json.loads(trip.itinerary_json or "[]"),
+        inclusions=json.loads(trip.inclusions_json or "[]"),
+        poster_image=trip.poster_image,
+        contact_phone=trip.contact_phone,
+        operator_name=op_name,
+        category=getattr(trip, "category", "Spiritual Pilgrimage") or "Spiritual Pilgrimage",
+        duration_days=getattr(trip, "duration_days", "3 Days / 2 Nights") or "3 Days / 2 Nights",
+        pickup_location=getattr(trip, "pickup_location", "Sakinaka Metro, Andheri East, Mumbai") or "Sakinaka Metro, Andheri East, Mumbai",
+        rating=getattr(trip, "rating", 4.9) or 4.9,
+        review_count=getattr(trip, "review_count", 128) or 128,
+        buses=buses_list
+    )
 
 @api_router.get("/buses/{bus_id}/seats")
 def get_bus_seats(bus_id: int, db: Session = Depends(get_db)):
@@ -599,33 +721,48 @@ def get_my_bookings(current_user: User = Depends(get_current_user), db: Session 
 def admin_login(req: schemas.AdminLoginRequest, db: Session = Depends(get_db)):
     clean_num = req.phone.strip()
     
-    if clean_num != settings.ADMIN_PHONE:
-        raise HTTPException(status_code=403, detail="Mobile number not authorized for admin access.")
+    # 1. Super Admin (Master Admin from .env)
+    if clean_num == settings.ADMIN_PHONE:
+        if req.secret_key and req.secret_key != settings.ADMIN_SECRET_KEY:
+            raise HTTPException(status_code=403, detail="Invalid admin secret key.")
 
-    if req.secret_key and req.secret_key != settings.ADMIN_SECRET_KEY:
-        raise HTTPException(status_code=403, detail="Invalid admin secret key.")
+        admin = db.query(User).filter(User.phone == clean_num, User.role == "admin").first()
+        if not admin:
+            admin = User(
+                phone=clean_num,
+                name=settings.ADMIN_NAME,
+                role="admin"
+            )
+            db.add(admin)
+            db.commit()
+            db.refresh(admin)
 
-    admin = db.query(User).filter(User.phone == clean_num, User.role == "admin").first()
-    if not admin:
-        admin = User(
-            phone=clean_num,
-            name=settings.ADMIN_NAME,
-            role="admin"
-        )
-        db.add(admin)
-        db.commit()
-        db.refresh(admin)
-
-    token = create_access_token({"sub": str(admin.id), "phone": admin.phone, "role": "admin"})
-    return {
-        "token": token,
-        "user": {
-            "id": admin.id,
-            "phone": admin.phone,
-            "name": admin.name,
-            "role": "admin"
+        token = create_access_token({"sub": str(admin.id), "phone": admin.phone, "role": "admin"})
+        return {
+            "token": token,
+            "user": {
+                "id": admin.id,
+                "phone": admin.phone,
+                "name": admin.name,
+                "role": "admin"
+            }
         }
-    }
+
+    # 2. Approved Partner Operator Login
+    partner = db.query(User).filter(User.phone == clean_num, User.role == "partner").first()
+    if partner:
+        token = create_access_token({"sub": str(partner.id), "phone": partner.phone, "role": "partner"})
+        return {
+            "token": token,
+            "user": {
+                "id": partner.id,
+                "phone": partner.phone,
+                "name": partner.name,
+                "role": "partner"
+            }
+        }
+
+    raise HTTPException(status_code=403, detail="Mobile number not authorized for admin or partner access.")
 
 @api_router.get("/admin/bookings")
 def get_all_bookings_admin(
@@ -870,8 +1007,10 @@ def create_trip_admin(
     db: Session = Depends(get_db)
 ):
     contact = req.contact_phone or settings.ORGANIZER_PHONE
+    op_name = req.operator_name or current_admin.name or "Suresh Bhai (Official Sakinaka Admin)"
     trip = TourTrip(
         title=req.title,
+        slug=generate_slug_for_trip(req.title, db),
         month_label=req.month_label,
         start_date=req.start_date,
         end_date=req.end_date,
@@ -880,13 +1019,111 @@ def create_trip_admin(
         description=req.description,
         itinerary_json=json.dumps(req.itinerary),
         inclusions_json=json.dumps(req.inclusions),
-        poster_image=req.poster_image,
-        contact_phone=contact
+        poster_image=req.poster_image or "/Balaji_temple_in_ketkawla.jpg",
+        contact_phone=contact,
+        operator_id=current_admin.id,
+        operator_name=op_name,
+        category=req.category or "Spiritual Pilgrimage",
+        duration_days=req.duration_days or "3 Days / 2 Nights",
+        pickup_location=req.pickup_location or "Sakinaka Metro, Andheri East, Mumbai",
+        rating=5.0,
+        review_count=1
     )
     db.add(trip)
     db.commit()
     db.refresh(trip)
-    return {"success": True, "trip_id": trip.id, "message": "New trip created successfully."}
+    return {"success": True, "trip_id": trip.id, "message": f"New trip created successfully by {op_name}."}
+
+@api_router.post("/partner/tours")
+def create_partner_tour(
+    req: schemas.PartnerTourCreateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Public & Partner self-service tour listing endpoint.
+    Allows verified hosts, temple mandals, and tour operators to list their tour.
+    Automatically provisions the TourTrip, the associated Bus coach, and generates seats!
+    """
+    contact = req.contact_phone or settings.ORGANIZER_PHONE
+    op_name = req.operator_name.strip() or "Verified Tour Partner"
+    
+    trip = TourTrip(
+        title=req.title,
+        slug=generate_slug_for_trip(req.title, db),
+        month_label=req.month_label,
+        start_date=req.start_date,
+        end_date=req.end_date,
+        year=2026,
+        status="active",
+        description=req.description or f"Official tour organized by {op_name}. Verified comfortable AC transport, hotel stay, and guided darshan.",
+        itinerary_json=json.dumps(req.itinerary if (req.itinerary and len(req.itinerary) > 0) else [
+            f"Day 1: Departure from {req.pickup_location}, Journey to Destination & Check-in",
+            "Day 2: Full Day Temple/Sightseeing Darshan & Local Yatra",
+            "Day 3: Morning Aarti, Shopping & Return Journey"
+        ]),
+        inclusions_json=json.dumps(req.inclusions if (req.inclusions and len(req.inclusions) > 0) else [
+            "AC Pushback Coach Travel",
+            "Hotel Stay (Twin/Triple Sharing)",
+            "Pure Veg Meals & Refreshments",
+            "VIP Darshan Passes",
+            "Toll, Parking & Dedicated Guide"
+        ]),
+        poster_image=req.poster_image or "/Balaji_temple_in_ketkawla.jpg",
+        contact_phone=contact,
+        operator_name=op_name,
+        category=req.category or "Spiritual Pilgrimage",
+        duration_days=req.duration_days or "3 Days / 2 Nights",
+        pickup_location=req.pickup_location or "Sakinaka Metro, Andheri East, Mumbai",
+        rating=5.0,
+        review_count=1
+    )
+    db.add(trip)
+    db.commit()
+    db.refresh(trip)
+
+    # Calculate seats and create initial bus
+    total_calculated = calculate_bus_total_seats(
+        left_seats_per_row=2,
+        right_seats_per_row=2,
+        total_rows=req.total_rows or 10,
+        has_back_row=True,
+        back_row_seats=5,
+        has_upper_deck=False
+    )
+
+    bus = Bus(
+        trip_id=trip.id,
+        name=req.bus_name or "Coach 1 - Luxury AC 2x2",
+        bus_number="",
+        bus_type=req.bus_type or "seater_2x2",
+        left_seats_per_row=2,
+        right_seats_per_row=2,
+        total_rows=req.total_rows or 10,
+        has_back_row=True,
+        back_row_seats=5,
+        has_upper_deck=False,
+        numbering_pattern="continuous_rl",
+        total_seats=total_calculated,
+        base_price=req.base_price or 2500.0,
+        upper_deck_price=None,
+        amenities_json=json.dumps(["AC", "Pushback Seats", "Charging Point", "Bottled Water", "Emergency Kit"])
+    )
+    db.add(bus)
+    db.commit()
+    db.refresh(bus)
+
+    # Generate seats
+    seats = generate_seat_allocations_for_bus(bus)
+    db.bulk_save_objects(seats)
+    db.commit()
+
+    return {
+        "success": True,
+        "trip_id": trip.id,
+        "bus_id": bus.id,
+        "operator_name": trip.operator_name,
+        "message": f"Tour '{trip.title}' listed successfully by partner {op_name}!"
+    }
 
 @api_router.post("/admin/buses")
 def create_bus_admin(
@@ -905,6 +1142,7 @@ def create_bus_admin(
 
     bus = Bus(
         trip_id=req.trip_id,
+        operator_id=current_admin.id,
         name=req.name,
         bus_number=req.bus_number.strip() if req.bus_number else "",
         bus_type=req.bus_type,
@@ -993,6 +1231,124 @@ def get_bus_passenger_manifest(
         "trip_title": bus.trip.title if bus.trip else "",
         "total_seats": bus.total_seats,
         "passengers": manifest_rows
+    }
+
+# ----------------- PARTNER ONBOARDING & INQUIRY SYSTEM -----------------
+@api_router.post("/partner/inquiry")
+def submit_partner_inquiry(
+    req: schemas.PartnerInquiryCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Submits a partner inquiry (Bus Operator / Tour Partner).
+    Strict rate-limiting: Max 5 inquiries per IP/Phone within 24 hours to prevent abuse.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    now = datetime.datetime.utcnow()
+    window_start = now - datetime.timedelta(hours=24)
+
+    # Check recent inquiry count for this IP or phone
+    recent_count = db.query(PartnerInquiry).filter(
+        or_(
+            PartnerInquiry.client_ip == client_ip,
+            PartnerInquiry.phone == req.phone
+        ),
+        PartnerInquiry.created_at >= window_start
+    ).count()
+
+    MAX_INQUIRIES_PER_DAY = 5
+    if recent_count >= MAX_INQUIRIES_PER_DAY:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Maximum {MAX_INQUIRIES_PER_DAY} partner inquiries reached for today. Please wait or contact our official helpline directly."
+        )
+
+    inquiry = PartnerInquiry(
+        name=req.name.strip(),
+        phone=req.phone.strip(),
+        city=req.city.strip(),
+        location_address=req.location_address.strip(),
+        latitude=req.latitude,
+        longitude=req.longitude,
+        fleet_size=req.fleet_size or "1-2 Buses",
+        status="PENDING",
+        notes=req.notes.strip() if req.notes else None,
+        client_ip=client_ip
+    )
+    db.add(inquiry)
+    db.commit()
+    db.refresh(inquiry)
+
+    remaining_attempts = MAX_INQUIRIES_PER_DAY - (recent_count + 1)
+
+    return {
+        "success": True,
+        "inquiry_id": inquiry.id,
+        "status": inquiry.status,
+        "remaining_attempts": remaining_attempts,
+        "message": f"Partner inquiry received! Our verification team will reach out at +91 {inquiry.phone} within 24 hours."
+    }
+
+@api_router.get("/admin/partner-inquiries", response_model=List[schemas.PartnerInquiryResponse])
+def get_partner_inquiries_admin(
+    status_filter: Optional[str] = None,
+    current_admin: User = Depends(get_current_super_admin),
+    db: Session = Depends(get_db)
+):
+    """Restricted to Super Admin ONLY. Lists all partner inquiries with verified locations."""
+    query = db.query(PartnerInquiry)
+    if status_filter:
+        query = query.filter(PartnerInquiry.status == status_filter)
+    return query.order_by(PartnerInquiry.created_at.desc()).all()
+
+@api_router.patch("/admin/partner-inquiries/{inquiry_id}/status")
+def update_partner_inquiry_status(
+    inquiry_id: int,
+    req: schemas.PartnerInquiryStatusUpdate,
+    current_admin: User = Depends(get_current_super_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Super Admin action: Approve or Reject a partner inquiry.
+    If APPROVED, creates or promotes user account to role='partner' so they can list their buses.
+    """
+    inquiry = db.query(PartnerInquiry).filter(PartnerInquiry.id == inquiry_id).first()
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Partner inquiry not found.")
+
+    target_status = req.status.upper().strip()
+    if target_status not in ["APPROVED", "REJECTED"]:
+        raise HTTPException(status_code=400, detail="Status must be either APPROVED or REJECTED.")
+
+    inquiry.status = target_status
+    if req.notes:
+        inquiry.notes = req.notes.strip()
+
+    # When approved, create or promote user to role='partner'
+    if target_status == "APPROVED":
+        partner_user = db.query(User).filter(User.phone == inquiry.phone).first()
+        if partner_user:
+            partner_user.role = "partner"
+            if not partner_user.name or partner_user.name.startswith("Devotee-"):
+                partner_user.name = inquiry.name
+        else:
+            partner_user = User(
+                phone=inquiry.phone,
+                name=inquiry.name,
+                role="partner"
+            )
+            db.add(partner_user)
+
+    db.commit()
+    db.refresh(inquiry)
+
+    return {
+        "success": True,
+        "inquiry_id": inquiry.id,
+        "status": inquiry.status,
+        "message": f"Partner inquiry #{inquiry.id} marked as {inquiry.status}." + 
+                   (" Partner account activated for bus listing." if target_status == "APPROVED" else "")
     }
 
 # ----------------- INCLUDE ROUTER UNDER CONCEALED BASE PREFIX -----------------

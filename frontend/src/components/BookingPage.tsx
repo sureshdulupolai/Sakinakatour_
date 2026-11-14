@@ -23,6 +23,7 @@ interface BookingPageProps {
   onToggleSeat: (seatNumber: string) => void;
   onOpenBookingModal?: () => void;
   onBackToHome: () => void;
+  onBackToCatalog?: () => void;
   onOpenSocialHelp: () => void;
 }
 
@@ -39,6 +40,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({
   onToggleSeat,
   onOpenBookingModal,
   onBackToHome,
+  onBackToCatalog,
   onOpenSocialHelp,
 }) => {
   const { t } = useLanguage();
@@ -62,26 +64,41 @@ export const BookingPage: React.FC<BookingPageProps> = ({
       {/* Top Header & Navigation Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200/80 transition-all mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('back')}</span>
-          </button>
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              type="button"
+              onClick={onBackToCatalog || onBackToHome}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200/80 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Tours Catalog</span>
+            </button>
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 px-2 py-1.5 transition-all"
+            >
+              <span>Home</span>
+            </button>
+          </div>
           
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-serif-heading">
-              Select Seats
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-950 font-serif-heading">
+              Select Coach Seats
             </h1>
             <span className="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-300">
               Live Coach Blueprint
             </span>
+            {activeTrip && (
+              <span className="text-xs font-bold text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Host: {activeTrip.operator_name || 'Suresh Bhai (Official Sakinaka Admin)'}</span>
+              </span>
+            )}
           </div>
           
           <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-            Pick your preferred coach seats with instant live confirmation.
+            {activeTrip?.title ? `Tour: ${activeTrip.title} • ` : ''}Pick your preferred seats on the 2x2 layout with instant confirmation.
           </p>
         </div>
 
