@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.next/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Databases & local storage
+*.sqlite3
+*.db
+backend/tour_data.db
+
+# Large media files in New directory that shouldn't be rescanned constantly
+New/Video/
+*.mp4
+
+# Environment & IDE
+.env
+.env.local
+.vscode/
+.idea/
+

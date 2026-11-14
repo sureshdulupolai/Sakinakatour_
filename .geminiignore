@@ -1,0 +1,10 @@
+node_modules/
+dist/
+venv/
+.venv/
+__pycache__/
+*.sqlite3
+*.db
+*.mp4
+New/Video/
+
