@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Armchair, Bed, Clock, Lock, Check, Disc, Info } from 'lucide-react';
+import { Armchair, Bed, Clock, Lock, Check, Disc, Info, ShieldCheck, DoorOpen, Sparkles } from 'lucide-react';
 import { SeatItem } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -16,7 +16,6 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
   seats,
   selectedSeatNumbers,
   onToggleSeat,
-  maxSeats = 60,
 }) => {
   const { t } = useLanguage();
   const [activeDeck, setActiveDeck] = useState<'lower' | 'upper'>('lower');
@@ -24,7 +23,8 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
   if (!bus || seats.length === 0) {
     return (
       <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 text-slate-500">
-        Loading bus seating layout...
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-sm font-bold text-slate-700">Loading coach seating blueprint...</p>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
   const hasUpper = bus.has_upper_deck;
   const isSleeper = hasUpper || bus.bus_type?.includes('sleeper');
 
-  // Filter seats for the active deck
+  // Filter seats for active deck
   const currentDeckSeats = seats.filter((s) => s.deck === activeDeck);
 
   // Group seats by row
@@ -46,108 +46,158 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
     .map(Number)
     .sort((a, b) => a - b);
 
-  // Identify back row (highest row number if side === 'back')
+  // Identify back row
   const backRowNumber = bus.total_rows + 1;
   const backRowSeats = currentDeckSeats.filter((s) => s.side === 'back');
   const normalRowNumbers = rowNumbers.filter((r) => r !== backRowNumber);
 
-  return (
-    <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6">
+  // Tally counts for current deck
+  const availableCount = currentDeckSeats.filter((s) => s.status === 'AVAILABLE').length;
+  const bookedCount = currentDeckSeats.filter((s) => s.status === 'BOOKED_CONFIRMED' || s.status === 'BLOCKED').length;
+  const holdCount = currentDeckSeats.filter((s) => s.status === 'HOLD_PENDING').length;
 
-      {/* Clean Header and Deck Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-xl font-bold text-slate-900">
-              {bus.name}
-            </h3>
-            {bus.bus_number && bus.bus_number.trim() && bus.bus_number !== 'TBA' ? (
-              <span className="font-mono text-xs font-bold bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded-lg border border-slate-200">
-                {bus.bus_number}
+  const hasValidPlate = Boolean(
+    bus.bus_number &&
+    bus.bus_number.trim() &&
+    bus.bus_number !== 'TBA' &&
+    bus.bus_number !== 'null' &&
+    bus.bus_number !== 'undefined'
+  );
+
+  const coachCategoryLabel = bus.bus_type
+    ? bus.bus_type.replace(/_/g, ' ').toUpperCase()
+    : (isSleeper ? 'EXECUTIVE AC SLEEPER' : 'AIR-SUSPENSION AC COACH');
+
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-7 space-y-6">
+
+      {/* Top Coach Header */}
+      <div className="border-b border-slate-100 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+            {bus.name}
+          </h3>
+          {hasValidPlate ? (
+            <span className="font-mono text-[11px] font-black bg-slate-900 text-amber-400 px-2 py-0.5 rounded-md border border-slate-700 whitespace-nowrap">
+              {bus.bus_number}
+            </span>
+          ) : (
+            <span className="text-[11px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap">
+              Vehicle Plate on Trip Day
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-slate-500 mt-1 font-medium">
+          {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Executive AC Sleeper' : 'Air-Suspension Pushback AC Coach'} • {t('select_seats_title')}
+        </p>
+      </div>
+
+      {/* Sleek Compact Segmented Deck Switcher */}
+      {hasUpper && (
+        <div className="flex justify-center">
+          <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveDeck('lower')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeDeck === 'lower'
+                  ? 'bg-white text-slate-900 border border-slate-200/80 shadow-none'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Armchair className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>{t('lower_deck')}</span>
+              <span className="text-[10px] font-normal text-slate-400">
+                ({seats.filter((s) => s.deck === 'lower').length})
               </span>
-            ) : (
-              <span className="text-[11px] font-semibold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-lg border border-amber-200">
-                {t('plate_allotted_trip_day')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveDeck('upper')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeDeck === 'upper'
+                  ? 'bg-white text-slate-900 border border-slate-200/80 shadow-none'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Bed className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>{t('upper_deck')}</span>
+              <span className="text-[10px] font-normal text-slate-400">
+                ({seats.filter((s) => s.deck === 'upper').length})
               </span>
-            )}
+            </button>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {bus.left_seats_per_row}x{bus.right_seats_per_row} {isSleeper ? 'Sleeper Coach' : 'Pushback Coach'} • {t('select_seats_title')}
-          </p>
+        </div>
+      )}
+
+      {/* Modern High-Contrast Legend Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs bg-slate-50 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80">
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          <div className="w-3.5 h-3.5 rounded border-2 border-slate-300 bg-white shrink-0" />
+          <span className="text-slate-700 font-semibold">{t('seat_available')} ({availableCount})</span>
         </div>
 
-        {/* Deck Switcher for Upper/Lower deck buses */}
-        {hasUpper && (
-          <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200">
-            <button
-              onClick={() => setActiveDeck('lower')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeDeck === 'lower'
-                ? 'bg-white text-slate-900 border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Armchair className="w-4 h-4 text-amber-700" />
-              <span>{t('lower_deck')}</span>
-            </button>
-            <button
-              onClick={() => setActiveDeck('upper')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeDeck === 'upper'
-                ? 'bg-white text-slate-900 border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Bed className="w-4 h-4 text-amber-700" />
-              <span>{t('upper_deck')}</span>
-            </button>
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          <div className="w-3.5 h-3.5 rounded border-2 border-amber-500 bg-white flex flex-col items-center justify-between p-0.5 shrink-0">
+            <div className="w-full h-0.5 bg-amber-500 rounded-full" />
+          </div>
+          <span className="font-bold text-amber-950">{t('seat_selected')} ({selectedSeatNumbers.length})</span>
+        </div>
+
+        {holdCount > 0 && (
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <div className="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-300 shrink-0" />
+            <span className="text-amber-900 font-medium">{t('seat_hold')} ({holdCount})</span>
           </div>
         )}
-      </div>
 
-      {/* Sleek Minimalist Legend Bar */}
-      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-slate-600 bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-md border-2 border-slate-300 bg-white" />
-          <span>{t('seat_available')}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-md bg-amber-600 text-white flex items-center justify-center">
-            <Check className="w-2.5 h-2.5 stroke-[3]" />
-          </div>
-          <span className="font-bold text-amber-900">{t('seat_selected')}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-md bg-amber-100 border border-amber-300" />
-          <span>{t('seat_hold')}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-md bg-slate-200 border border-slate-300" />
-          <span>{t('seat_booked')}</span>
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          <div className="w-3.5 h-3.5 rounded bg-slate-200 border border-slate-300 shrink-0" />
+          <span className="text-slate-500 font-medium">{t('seat_booked')} ({bookedCount})</span>
         </div>
       </div>
 
-      {/* Coach Layout Display */}
+      {/* Realistic Luxury Coach Blueprint Container */}
       <div className="w-full max-w-[440px] mx-auto">
-        <div className="relative bg-slate-50/80 p-5 sm:p-6 rounded-[32px] border-4 border-slate-200/90">
+        <div className="relative bg-slate-50/70 p-4 sm:p-6 rounded-t-[44px] rounded-b-[28px] border-4 border-slate-300">
 
-          {/* Front / Driver Area */}
-          <div className="flex items-center justify-between pb-5 mb-5 border-b-2 border-dashed border-slate-300">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-white px-3 py-1.5 rounded-xl border border-slate-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>{t('front_door')}</span>
+          {/* Aerodynamic Windscreen & Cabin Top */}
+          <div className="mb-4">
+            {/* Front Bumper with Headlight Accents */}
+            <div className="flex items-center justify-between px-6 pb-2">
+              <span className="w-3.5 h-1.5 rounded-full bg-amber-400 border border-amber-500" title="Left LED Headlight" />
+              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                {coachCategoryLabel}
+              </span>
+              <span className="w-3.5 h-1.5 rounded-full bg-amber-400 border border-amber-500" title="Right LED Headlight" />
             </div>
 
-            {/* Steering Wheel */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-200 border border-slate-300 text-slate-700">
-              <span className="text-[11px] font-bold uppercase tracking-wider">{t('driver')}</span>
-              <Disc className="w-4 h-4 text-slate-600" />
+            {/* Tinted Windscreen Glass Header */}
+            <div className="h-10 rounded-t-[32px] bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12" />
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300">
+                Front Windscreen
+              </span>
+            </div>
+
+            {/* Driver Cockpit & Passenger Entrance Divider */}
+            <div className="mt-2 flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200">
+              {/* Passenger Entrance (Left side boarding) */}
+              <div className="flex items-center gap-1.5 text-[10px] font-black text-emerald-800 uppercase tracking-wider bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <DoorOpen className="w-3 h-3 text-emerald-600" />
+                <span>Passenger Entry</span>
+              </div>
+
+              {/* Driver Console (Right side driving) */}
+              <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-700 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                <span>Driver Cabin</span>
+                <Disc className="w-3.5 h-3.5 text-slate-700" />
+              </div>
             </div>
           </div>
 
-          {/* Regular Rows Grid */}
-          <div className="space-y-3">
+          {/* Regular Rows Seating Grid with Walkway Runner */}
+          <div className="space-y-2.5 relative">
             {normalRowNumbers.map((rowNum) => {
               const rowSeats = rowsMap[rowNum] || [];
               const leftSeats = rowSeats.filter((s) => s.side === 'left');
@@ -156,15 +206,17 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
               return (
                 <div key={rowNum} className="flex items-center justify-between gap-2">
 
-                  {/* Left Side */}
+                  {/* Left Side Seats */}
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     {leftSeats.map((seat) => renderSeatButton(seat))}
                   </div>
 
-                  {/* Clean Empty Aisle Walkway (No row numbers) */}
-                  <div className="w-5 sm:w-7 shrink-0" aria-hidden="true" />
+                  {/* Central Aisle Walkway with dashed guideline */}
+                  <div className="flex-1 flex flex-col items-center justify-center py-1">
+                    <div className="h-6 w-px border-r border-dashed border-slate-300" />
+                  </div>
 
-                  {/* Right Side */}
+                  {/* Right Side Seats */}
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     {rightSeats.map((seat) => renderSeatButton(seat))}
                   </div>
@@ -174,10 +226,10 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
             })}
           </div>
 
-          {/* Rear Back Row */}
+          {/* Rear Back Row Seats (if configured) */}
           {backRowSeats.length > 0 && (
-            <div className="mt-5 pt-4 border-t-2 border-dashed border-slate-300">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center mb-2">
+            <div className="mt-4 pt-3 border-t-2 border-dashed border-slate-300">
+              <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 text-center mb-1.5">
                 {t('rear_back_row')}
               </div>
               <div className="flex items-center justify-between gap-1 sm:gap-1.5">
@@ -186,11 +238,23 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
             </div>
           )}
 
+          {/* Rear Coach Safety Bumper */}
+          <div className="mt-4 pt-2.5 border-t border-slate-200 flex items-center justify-between text-[10px] font-bold text-slate-400">
+            <span className="flex items-center gap-1 text-slate-500">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span>Speed Governor & GPS</span>
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-1.5 rounded-full bg-red-400/80 border border-red-500" title="Rear Taillight" />
+              <span className="w-3 h-1.5 rounded-full bg-red-400/80 border border-red-500" title="Rear Taillight" />
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div className="text-center text-xs text-slate-400">
-        {t('select_seats_hint')}
+      <div className="text-center text-xs text-slate-500 font-medium">
+        💡 {t('select_seats_hint')}
       </div>
 
     </div>
@@ -202,33 +266,58 @@ export const BusLayoutViewer: React.FC<BusLayoutViewerProps> = ({
     const isPending = seat.status === 'HOLD_PENDING';
     const isBooked = seat.status === 'BOOKED_CONFIRMED' || seat.status === 'BLOCKED';
 
-    let buttonClass = 'bg-white border-2 border-slate-300 text-slate-800 hover:border-amber-500 hover:scale-105';
-    let icon = isSleeper ? <Bed className="w-4 h-4 text-slate-400" /> : <Armchair className="w-4 h-4 text-slate-400" />;
+    let buttonClass = 'bg-white border-2 border-slate-300 text-slate-800 hover:border-amber-400 hover:bg-amber-50/20 transition-all duration-300 ease-out';
+    let iconClass = 'text-slate-400 transition-colors duration-300 ease-out';
 
     if (isSelected) {
-      buttonClass = 'bg-amber-600 border-2 border-amber-800 text-white scale-105 ring-2 ring-amber-400/40';
-      icon = <Check className="w-4 h-4 stroke-[3] text-white" />;
+      // Background remains white, crisp flat border with zero shadow or ring, smooth animation
+      buttonClass = 'bg-white border-2 border-amber-500 text-amber-950 scale-[1.03] font-black transition-all duration-300 ease-out';
+      // The seat icon is NOT replaced by a checkmark; instead it smoothly turns vibrant amber
+      iconClass = 'text-amber-600 stroke-[2.2] transition-colors duration-300 ease-out';
     } else if (isPending) {
-      buttonClass = 'bg-amber-100 border-2 border-amber-300 text-amber-900 cursor-not-allowed opacity-85';
-      icon = <Clock className="w-4 h-4 text-amber-700" />;
+      buttonClass = 'bg-amber-50 border-2 border-amber-200 text-amber-900 cursor-not-allowed opacity-80';
+      iconClass = 'text-amber-700';
     } else if (isBooked) {
-      buttonClass = 'bg-slate-200 border-2 border-slate-300 text-slate-400 cursor-not-allowed opacity-60';
-      icon = <Lock className="w-4 h-4 text-slate-400" />;
+      buttonClass = 'bg-slate-100 border-2 border-slate-300 text-slate-400 cursor-not-allowed opacity-60';
+      iconClass = 'text-slate-400';
     }
 
+    const icon = isBooked ? (
+      <Lock className="w-3.5 h-3.5 text-slate-400" />
+    ) : isPending ? (
+      <Clock className="w-3.5 h-3.5 text-amber-700" />
+    ) : isSleeper ? (
+      <Bed className={`w-3.5 h-3.5 ${iconClass}`} />
+    ) : (
+      <Armchair className={`w-3.5 h-3.5 ${iconClass}`} />
+    );
+
     const widthClass = isSleeper
-      ? 'w-16 sm:w-20 h-13 sm:h-15'
-      : (isBackRow ? 'flex-1 min-w-[36px] h-13 sm:h-15' : 'w-12 sm:w-14 h-13 sm:h-15');
+      ? 'w-16 sm:w-20 h-12 sm:h-14'
+      : (isBackRow ? 'flex-1 min-w-[34px] h-12 sm:h-14' : 'w-12 sm:w-14 h-12 sm:h-14');
 
     return (
       <button
         key={seat.id}
+        type="button"
         disabled={!isAvailable && !isSelected}
         onClick={() => onToggleSeat(seat.seat_number)}
-        title={`Seat ${seat.seat_number} - ₹${seat.price}`}
-        className={`${widthClass} rounded-2xl font-bold flex flex-col items-center justify-center p-1 transition-all ${buttonClass}`}
+        title={`Seat ${seat.seat_number} - ₹${seat.price.toLocaleString('en-IN')}`}
+        className={`${widthClass} rounded-2xl font-bold flex flex-col items-center justify-between p-1.5 active:scale-95 relative group shadow-none ${buttonClass}`}
       >
-        <span className="text-xs sm:text-sm font-black leading-none mb-1">{seat.seat_number}</span>
+        {/* Animated Headrest cushion contour - fills with amber on select with smooth slide animation */}
+        <div className="w-3/4 h-1 rounded-full bg-slate-200 overflow-hidden relative">
+          <div
+            className={`h-full bg-amber-500 rounded-full transition-all duration-300 ease-out ${
+              isSelected ? 'w-full opacity-100' : 'w-0 opacity-0'
+            }`}
+          />
+        </div>
+
+        <span className="text-xs sm:text-sm font-black leading-none my-0.5">
+          {seat.seat_number}
+        </span>
+
         {icon}
       </button>
     );

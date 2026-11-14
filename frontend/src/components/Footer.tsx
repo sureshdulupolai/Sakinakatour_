@@ -59,10 +59,10 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="bg-slate-950 text-slate-400 text-xs border-t border-slate-900 overflow-hidden notranslate" translate="no">
       
-      {/* 1. Real-World Trust Strip / Guarantees */}
-      <div className="border-b border-slate-900 bg-slate-950/60 py-6">
+      {/* 1. Real-World Trust Strip / Guarantees - Compact */}
+      <div className="border-b border-slate-900 bg-slate-950/60 py-4 sm:py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             
             <div className="flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
@@ -108,8 +108,8 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
       </div>
 
-      {/* 2. Main Footer Multi-Column Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14">
+      {/* 2. Main Footer Multi-Column Grid - Space Efficient */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12">
           
           {/* Brand & Mission (Col 1 - 5 cols) */}
@@ -291,7 +291,7 @@ export const Footer: React.FC<FooterProps> = ({
       </div>
 
       {/* 3. Bottom Copyright & Admin Access */}
-      <div className="border-t border-slate-900 bg-slate-950 py-5">
+      <div className="border-t border-slate-900 bg-slate-950 py-3.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
           <div>
             © {new Date().getFullYear()} Sakinaka Tour • Krishh Travels, Mumbai. All rights reserved.

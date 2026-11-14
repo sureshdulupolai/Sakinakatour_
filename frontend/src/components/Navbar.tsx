@@ -24,36 +24,36 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand: Krish Logo + Clean Wordmark */}
         <div 
           onClick={() => onNavigate('/')}
-          className="flex items-center gap-3.5 cursor-pointer select-none"
+          className="flex items-center gap-3 cursor-pointer select-none"
         >
-          <div className="w-12 h-12 rounded-full ring-2 ring-amber-400/80 p-0.5 flex items-center justify-center overflow-hidden bg-slate-950">
+          <div className="w-10 h-10 rounded-full ring-2 ring-amber-400/80 p-0.5 flex items-center justify-center overflow-hidden bg-slate-950 shrink-0">
             <img
               src="/krishh_logo_circle.png"
               alt="Krishh Logo"
-              className="w-full h-full object-cover rounded-full transition-transform duration-300 ease-out hover:scale-125 cursor-pointer"
+              className="w-full h-full object-cover rounded-full transition-transform duration-300 ease-out hover:scale-115 cursor-pointer"
               onError={(e) => {
                 e.currentTarget.src = "/krishh_logo.png";
               }}
             />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-serif-heading leading-tight">
+            <h1 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 font-serif-heading leading-tight">
               {t('brand_name')}
             </h1>
-            <p className="text-[11px] font-semibold text-amber-800 tracking-wider uppercase">
+            <p className="text-[10px] font-semibold text-amber-800 tracking-wider uppercase">
               {t('brand_tagline')}
             </p>
           </div>
         </div>
 
         {/* Clean, Dedicated Page Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+        <nav className="hidden md:flex items-center gap-6 text-xs sm:text-sm font-semibold text-slate-600">
           <button
             onClick={() => onNavigate('/')}
             className={`transition-colors py-1 ${
@@ -84,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right Clean Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           
           {/* Universal All-India Language Selector */}
           <LanguageSelector />
@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Book Button */}
           <button
             onClick={() => onNavigate('/book')}
-            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
               currentPath === '/book'
                 ? 'bg-amber-800 text-white'
                 : 'bg-amber-600 hover:bg-amber-700 text-white'
@@ -104,10 +104,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* My Bookings Icon Button */}
           <button
             onClick={onOpenMyBookings}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl text-slate-700 hover:bg-slate-100 transition-all border border-slate-200"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg text-slate-700 hover:bg-slate-100 transition-all border border-slate-200"
             title="View My Bookings"
           >
-            <Ticket className="w-4 h-4 text-amber-700" />
+            <Ticket className="w-3.5 h-3.5 text-amber-700" />
             <span className="hidden lg:inline">{t('nav_my_bookings')}</span>
           </button>
 
@@ -127,27 +127,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               {user.role === 'admin' && (
                 <button
                   onClick={onOpenAdminPortal}
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition-all flex items-center gap-1"
+                  className="px-2 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition-all flex items-center gap-1"
                   title="Organizer Admin Portal"
                 >
-                  <ShieldCheck className="w-4 h-4 text-amber-800" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-800" />
                   <span className="hidden sm:inline">{t('nav_admin')}</span>
                 </button>
               )}
 
               <button
                 onClick={logout}
-                className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"
                 title="Log Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={onOpenLoginModal}
-                className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center gap-1.5"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>{t('nav_login')}</span>
@@ -155,10 +155,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 onClick={onOpenAdminPortal}
-                className="p-2 text-slate-400 hover:text-amber-800 hover:bg-slate-100 rounded-xl transition-colors"
+                className="p-1.5 text-slate-400 hover:text-amber-800 hover:bg-slate-100 rounded-lg transition-colors"
                 title="Admin Access"
               >
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-3.5 h-3.5" />
               </button>
             </div>
           )}

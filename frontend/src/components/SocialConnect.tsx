@@ -15,55 +15,61 @@ export const SocialConnect: React.FC<SocialConnectProps> = ({ settings }) => {
   const emergencyPhone = settings.emergency_helpline || '+91 98200 99999';
 
   return (
-    <section id="social" className="py-16 bg-slate-50 border-b border-slate-200/80">
+    <section id="social" className="py-10 sm:py-14 bg-slate-50/50 border-b border-slate-200 notranslate" translate="no">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full">
+        {/* Header - Full Responsive Width & No Orphan Lines */}
+        <div className="text-center max-w-4xl lg:max-w-5xl mx-auto mb-8 sm:mb-10 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-md">
             Devotee Community & Support
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 font-serif-heading">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 font-serif-heading tracking-tight text-balance">
             Humse Sampark Karein & Parivar Se Judein
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
             Tour updates, photo sharing, live location aur darshan timings ke liye WhatsApp Group aur Instagram se judein.
           </p>
         </div>
 
-        {/* 3 Main Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 3 Main Action Cards: Balanced, Prominent & High Contrast */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
           
-          {/* Card 1: WhatsApp Group Card */}
-          <div className="bg-white rounded-3xl p-6 border border-emerald-200/80 card-hover-lift flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                  <MessageCircle className="w-7 h-7" />
+          {/* Card 1: WhatsApp Group */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-emerald-200 hover:border-emerald-400 transition-colors flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-700 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md uppercase tracking-wider">
                   Official Group
                 </span>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900">Official WhatsApp Group</h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Yatra announcements, boarding point alerts, lunch halts aur daily schedule ke liye yahan join karein.
-              </p>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                  Official WhatsApp Group
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Yatra announcements, boarding alerts, lunch halts aur daily schedule ke liye join karein.
+                </p>
+              </div>
 
-              {/* QR Code preview */}
-              <div className="my-5 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-                <img
-                  src="/wa_qr.png"
-                  alt="WhatsApp QR Code"
-                  className="w-36 h-36 object-contain rounded-xl bg-white p-1 border border-slate-200"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-                  <QrCode className="w-3 h-3 text-emerald-600" />
-                  Scan to join group directly
+              {/* Prominent, Centered QR Scanner */}
+              <div className="my-3 p-4 bg-slate-50/90 rounded-xl border border-slate-200/90 flex flex-col items-center justify-center">
+                <div className="p-2.5 bg-white rounded-xl border border-slate-200 ring-1 ring-emerald-500/20">
+                  <img
+                    src="/wa_qr.png"
+                    alt="WhatsApp QR Code"
+                    className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-slate-600 mt-2.5 flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Scan with Phone Camera to Join</span>
                 </span>
               </div>
             </div>
@@ -72,43 +78,49 @@ export const SocialConnect: React.FC<SocialConnectProps> = ({ settings }) => {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition-all hover:scale-[1.01] shrink-0"
             >
               <span>Join WhatsApp Group</span>
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
-          {/* Card 2: Instagram Community Card */}
-          <div className="bg-white rounded-3xl p-6 border border-rose-200/80 card-hover-lift flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
-                  <Instagram className="w-7 h-7" />
+          {/* Card 2: Instagram Community */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-rose-200 hover:border-rose-400 transition-colors flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-xl bg-rose-500/15 text-rose-700 flex items-center justify-center shrink-0">
+                  <Instagram className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-bold bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-bold bg-rose-100 text-rose-800 px-2.5 py-1 rounded-md uppercase tracking-wider">
                   Photos & Reels
                 </span>
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900">Instagram Community</h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Pichle saalon ki yatra photos, darshan videos, aarti reels aur upcoming tour posters dekhein.
-              </p>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                  Instagram Community
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Pichle saalon ki yatra photos, darshan videos, aarti reels aur upcoming posters dekhein.
+                </p>
+              </div>
 
-              {/* QR Code preview */}
-              <div className="my-5 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-                <img
-                  src="/insta_qr.png"
-                  alt="Instagram QR Code"
-                  className="w-36 h-36 object-contain rounded-xl bg-white p-1 border border-slate-200"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-                  <QrCode className="w-3 h-3 text-rose-600" />
-                  Scan with Camera or Insta
+              {/* Prominent, Centered QR Scanner */}
+              <div className="my-3 p-4 bg-slate-50/90 rounded-xl border border-slate-200/90 flex flex-col items-center justify-center">
+                <div className="p-2.5 bg-white rounded-xl border border-slate-200 ring-1 ring-rose-500/20">
+                  <img
+                    src="/insta_qr.png"
+                    alt="Instagram QR Code"
+                    className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-slate-600 mt-2.5 flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Scan with Instagram to Follow</span>
                 </span>
               </div>
             </div>
@@ -117,65 +129,64 @@ export const SocialConnect: React.FC<SocialConnectProps> = ({ settings }) => {
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-sm transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-xs sm:text-sm transition-all hover:scale-[1.01] shrink-0"
             >
               <span>Follow on Instagram</span>
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
-          {/* Card 3: Organizer Contact & Emergency Helpline */}
-          <div id="contact" className="bg-white rounded-3xl p-6 border border-amber-200/80 card-hover-lift flex flex-col justify-between">
-            <div className="space-y-4">
+          {/* Card 3: Direct Organizer Contact */}
+          <div id="contact" className="bg-white rounded-2xl p-5 sm:p-6 border border-amber-200 hover:border-amber-400 transition-colors flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
-                  <PhoneCall className="w-7 h-7" />
+                <div className="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-800 flex items-center justify-center shrink-0">
+                  <PhoneCall className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full">
+                <span className="text-[11px] font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-md uppercase tracking-wider">
                   Direct Organizers
                 </span>
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Direct Contact & Tour Listing</h3>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                  Direct Contact & Listing
+                </h3>
                 <p className="text-xs text-slate-600 mt-1">
-                  Kissi bhi jaankari, apna tour ya group trip list karwane ya booking ke liye hume call ya WhatsApp karein.
+                  Tour jaankari, customized group trip organize karne ya booking ke liye hume call karein.
                 </p>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase">Yatra Pramukh / Organizer</div>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5">{primaryPhone}</div>
+              <div className="space-y-2.5 pt-1 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yatra Pramukh / Organizer</div>
+                  <a href={`tel:${primaryPhone.replace(/\s+/g, '')}`} className="text-base font-black text-slate-950 hover:text-amber-700 block mt-0.5">
+                    {primaryPhone}
+                  </a>
                   <div className="text-xs text-slate-500">{altPhone}</div>
                 </div>
 
-                <div className="p-3 bg-rose-50/60 rounded-xl border border-rose-100">
-                  <div className="text-[11px] font-bold text-rose-700 uppercase">24x7 Emergency Yatra Helpline</div>
-                  <div className="text-sm font-bold text-rose-950 mt-0.5">{emergencyPhone}</div>
+                <div className="p-2.5 bg-rose-50/70 rounded-xl border border-rose-200/70">
+                  <div className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">24x7 Emergency Yatra Helpline</div>
+                  <a href={`tel:${emergencyPhone.replace(/\s+/g, '')}`} className="text-sm font-black text-rose-950 block mt-0.5">
+                    {emergencyPhone}
+                  </a>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-600 pt-1">
-                  <Mail className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>{email}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-slate-600">
-                  <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Sakinaka & Ghatkopar, Mumbai, Maharashtra</span>
+                <div className="flex items-center gap-1.5 text-xs text-slate-600 pt-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span className="truncate">Sakinaka Junction, Andheri East, Mumbai 400072</span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4">
-              <a
-                href={`tel:${primaryPhone.replace(/\s+/g, '')}`}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition-all"
-              >
-                <PhoneCall className="w-4 h-4" />
-                <span>Call Organizer Now</span>
-              </a>
-            </div>
+            <a
+              href={`tel:${primaryPhone.replace(/\s+/g, '')}`}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-all hover:scale-[1.01] shrink-0"
+            >
+              <PhoneCall className="w-4 h-4" />
+              <span>Call Organizer Now</span>
+            </a>
           </div>
 
         </div>
@@ -184,4 +195,3 @@ export const SocialConnect: React.FC<SocialConnectProps> = ({ settings }) => {
     </section>
   );
 };
-

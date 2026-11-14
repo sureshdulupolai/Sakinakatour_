@@ -229,9 +229,11 @@ export function App() {
             busDetails={busDetails}
             seats={seats}
             selectedSeatNumbers={selectedSeatNumbers}
+            selectedTotalAmount={selectedTotalAmount}
             onSelectTrip={handleSelectTrip}
             onSelectBus={handleSelectBus}
             onToggleSeat={handleToggleSeat}
+            onOpenBookingModal={() => setIsBookingModalOpen(true)}
             onBackToHome={() => navigate('/')}
             onOpenSocialHelp={() => {
               navigate('/');
@@ -250,30 +252,55 @@ export function App() {
         )}
       </main>
 
-      {/* Sleek Minimalist Floating Selection Pill Dock */}
+      {/* World-Class Fixed Bottom Action Bar (redBus Prima / MakeMyTrip standard) */}
       {selectedSeatNumbers.length > 0 && activeBus && currentPath === '/book' && (
-        <div className="fixed bottom-4 inset-x-0 z-40 px-3 sm:px-4 pointer-events-none">
-          <div className="max-w-xl mx-auto pointer-events-auto bg-slate-900/95 backdrop-blur-md text-white py-2.5 px-4 sm:px-5 rounded-2xl border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
-
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-              <div className="truncate">
-                <span className="text-xs font-mono font-bold text-amber-400 bg-slate-800 px-2 py-0.5 rounded">
-                  {selectedSeatNumbers.length} Seat{selectedSeatNumbers.length > 1 ? 's' : ''}: {selectedSeatNumbers.join(', ')}
+        <div className="fixed bottom-0 inset-x-0 z-50 bg-white/98 backdrop-blur-md border-t-2 border-slate-200 animate-in slide-in-from-bottom duration-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+            
+            {/* Left Column: Selected Seat Tags with counts */}
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Selected Seats ({selectedSeatNumbers.length})
                 </span>
-                <span className="text-sm sm:text-base font-extrabold text-white ml-2">
-                  ₹{selectedTotalAmount.toLocaleString('en-IN')}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                  {selectedSeatNumbers.map((sn) => (
+                    <span
+                      key={sn}
+                      className="inline-flex items-center gap-1 font-mono text-xs font-black bg-amber-50 text-amber-950 border border-amber-300 px-2 py-0.5 rounded-lg"
+                    >
+                      <span>{sn}</span>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsBookingModalOpen(true)}
-              className="shrink-0 px-4 sm:px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5"
-            >
-              <span>{t('proceed_to_book')}</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
+            {/* Middle / Right Column: Live Fare & Primary Proceed CTA */}
+            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 shrink-0 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                  Total Payable
+                </span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    ₹{selectedTotalAmount.toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    All-Inclusive
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsBookingModalOpen(true)}
+                className="px-5 sm:px-7 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm transition-all flex items-center gap-2 border-2 border-amber-600 shadow-none shrink-0"
+              >
+                <span>{t('proceed_to_book')}</span>
+                <ArrowRight className="w-4 h-4 stroke-[3]" />
+              </button>
+            </div>
 
           </div>
         </div>
